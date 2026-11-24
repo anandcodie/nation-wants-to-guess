@@ -1,0 +1,2282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Nation Wants to Guess Player</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Inter:wght@400;600;700&display=swap">
+<style>
+/* Layout: one file, three views picked by the hash. #tv is a 16:9 stage read from across a room; #host is a one-column phone remote; no hash is the lobby. Single deliberate dark game-show look. */
+:root{
+  --bg:#0B0A1F; --panel:#17153B; --panel2:#221F52; --line:#353170;
+  --fg:#FFF8EC; --muted:#A9A3C9; --dim:#6F6A98;
+  --accent:#FFD23F; --hot:#FF3D81; --teal:#2EE6D6; --good:#4ADE80; --bad:#FF6B6B;
+  --t0:#FF3D81; --t1:#2EE6D6; --t2:#FFD23F; --t3:#9B7BFF;
+  --display:'Bricolage Grotesque','Arial Black',Impact,sans-serif;
+  --body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.35;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+input{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.05;margin:0;text-wrap:balance}
+.num{font-variant-numeric:tabular-nums}
+.eyebrow{font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- Lobby ---------- */
+.lobby{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding-block:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center}
+.lobby h1{font-size:clamp(2.4rem,8vw,5rem);color:var(--accent)}
+.lobby p{max-width:34rem;color:var(--muted);margin:0}
+.lobby .choices{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;width:100%;max-width:640px}
+.bigbtn{flex:1 1 240px;min-width:0;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:22px 18px;text-align:left;display:flex;flex-direction:column;gap:6px}
+.bigbtn:active{transform:scale(.98)}
+.bigbtn b{font-family:var(--display);font-size:1.5rem}
+.bigbtn span{color:var(--muted);font-size:.92rem}
+.bigbtn.hot{border-color:var(--hot)}
+.bigbtn.teal{border-color:var(--teal)}
+
+/* ---------- TV stage ---------- */
+.tv{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;background:var(--bg);overflow:hidden;cursor:none;--hue:265}
+.tv>*{position:relative;z-index:1}
+.aurora{position:absolute;inset:-25%;z-index:0;pointer-events:none;filter:blur(70px);opacity:.5}
+.aurora i{position:absolute;border-radius:50%;width:55vw;height:55vw;background:hsl(var(--hue) 90% 55%);animation:drift 20s ease-in-out infinite alternate;transition:background 1.2s}
+.aurora i:nth-child(1){left:-5%;top:-15%}
+.aurora i:nth-child(2){right:-10%;top:15%;background:hsl(calc(var(--hue) + 70) 90% 55%);animation-duration:26s;animation-delay:-9s}
+.aurora i:nth-child(3){left:25%;bottom:-35%;background:hsl(calc(var(--hue) - 60) 85% 50%);animation-duration:31s;animation-delay:-15s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(10vw,8vh) scale(1.25)}}
+.tv::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,.08) 1px,transparent 1.5px);background-size:26px 26px}
+.tv.low::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;box-shadow:inset 0 0 14vw rgba(255,61,129,.55);animation:pulse .5s ease-in-out infinite alternate}
+@keyframes pulse{from{opacity:.4}to{opacity:1}}
+.stage.enter{animation:rise .6s cubic-bezier(.2,.9,.3,1.15) both}
+@keyframes rise{from{opacity:0;transform:translateY(40px) scale(.96)}to{opacity:1;transform:none}}
+.stage .ans{position:relative;overflow:hidden;box-shadow:0 0 40px rgba(255,210,63,.35)}
+.stage .ans::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);transform:translateX(-120%);animation:shine 1.1s .25s forwards}
+@keyframes shine{to{transform:translateX(120%)}}
+.scorechip{transition:transform .3s,box-shadow .3s}
+.scorechip.bump{transform:translateY(-6px);box-shadow:0 0 0 3px var(--tc) inset,0 0 30px var(--tc)}
+.scorechip.bump .s{animation:bump .7s cubic-bezier(.2,1.6,.4,1)}
+@keyframes bump{35%{transform:scale(1.5)}}
+.burst{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:1vh}
+.burst b{font-family:var(--display);font-size:clamp(4rem,14vw,14rem);line-height:1;color:var(--tc);text-shadow:0 0 50px var(--tc),0 6px 0 rgba(0,0,0,.4);animation:burstIn 1.5s cubic-bezier(.2,1.5,.4,1) forwards}
+.burst span{font-family:var(--display);font-size:clamp(1.4rem,4vw,4rem);color:var(--fg);animation:burstIn 1.5s .05s cubic-bezier(.2,1.5,.4,1) forwards}
+.burst.bad b{color:var(--bad);text-shadow:0 0 50px var(--bad);animation:shake 1.4s forwards}
+@keyframes burstIn{0%{transform:scale(.2) rotate(-8deg);opacity:0}25%{transform:scale(1.1) rotate(2deg);opacity:1}75%{transform:scale(1) rotate(0);opacity:1}100%{transform:scale(1.15);opacity:0}}
+@keyframes shake{0%{opacity:0;transform:translateX(0)}10%{opacity:1}20%{transform:translateX(-18px)}40%{transform:translateX(18px)}60%{transform:translateX(-10px)}80%{transform:translateX(10px);opacity:1}100%{transform:translateX(0);opacity:0}}
+.burst .bits{position:absolute;inset:0}
+.burst .bits i{position:absolute;left:50%;top:50%;width:1vw;height:2vh;background:var(--c);border-radius:2px;animation:fly 1.4s cubic-bezier(.1,.8,.3,1) forwards}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(720deg);opacity:0}}
+.board .cat{transform:skew(-6deg);background:linear-gradient(135deg,var(--hot),#ff7ab0);box-shadow:0 6px 0 rgba(0,0,0,.35)}
+.board .cat>*{transform:skew(6deg)}
+.board .tile{transition:transform .6s,opacity .6s,background .3s;transform-style:preserve-3d;box-shadow:0 4px 0 rgba(0,0,0,.3)}
+.board .tile.used{transform:rotateY(180deg) scale(.9);opacity:.12;background:var(--panel);color:transparent}
+.stage.enter .board .tile{animation:rise .5s both}
+.hint{animation:none}
+.hint.new{animation:slideIn .55s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes slideIn{from{opacity:0;transform:translateX(-60px)}to{opacity:1;transform:none}}
+.emoji .g{display:inline-block}
+.stage.enter .emoji .g{animation:bounceIn .8s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes bounceIn{0%{transform:translateY(-70px) scale(.4);opacity:0}60%{transform:translateY(12px) scale(1.08);opacity:1}100%{transform:none}}
+.stage.enter.tv-intro h2 .w{display:inline-block;animation:rise .7s both}
+.rules{list-style:none;margin:0;padding:0;display:grid;gap:1.4vh;width:min(100%,1100px);text-align:left}
+.rules li{display:grid;grid-template-columns:auto 1fr;gap:1.6vw;align-items:center;background:var(--panel);border-radius:14px;padding:1.4vh 2vw;font-size:clamp(1.05rem,2.1vw,1.9rem);font-weight:600}
+.rules li .i{font-family:var(--display);color:var(--accent);font-size:1.3em;width:1.3em}
+.stage.enter .rules li{animation:slideIn .55s cubic-bezier(.2,.9,.3,1.2) both}
+.wish{font-family:var(--display);font-size:clamp(1.4rem,3.4vw,3.2rem);color:var(--hot);margin-top:1vh}
+.tv-intro .rn{display:inline-block;background:var(--hot);color:#1a0616;padding:.4vh 1.4vw;border-radius:999px;transform:rotate(-3deg)}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:2vw;width:min(100%,1100px);height:40vh}
+.podium .step{flex:1;display:flex;flex-direction:column;align-items:center;gap:1vh;height:100%;justify-content:flex-end}
+.podium .step .n{font-family:var(--display);font-size:clamp(1rem,2.4vw,2.2rem);color:var(--tc);text-align:center}
+.podium .step .block{width:100%;background:linear-gradient(180deg,var(--tc),color-mix(in srgb,var(--tc) 35%,#000));border-radius:16px 16px 0 0;display:flex;flex-direction:column;align-items:center;padding-top:1.4vh;transform-origin:bottom;animation:riseUp .9s cubic-bezier(.2,.9,.3,1.1) both}
+.podium .step .block .pos{font-family:var(--display);font-size:clamp(1.6rem,4vw,4rem);color:#120f2a;line-height:1}
+.podium .step .block .s{font-family:var(--display);font-size:clamp(1.2rem,2.6vw,2.4rem);color:#120f2a}
+.podium .p0 .block{height:70%}.podium .p1 .block{height:48%;animation-delay:.25s}.podium .p2 .block{height:34%;animation-delay:.5s}
+@keyframes riseUp{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.winner h1{text-shadow:0 0 60px var(--tc)}
+.drumroll{font-size:clamp(5rem,16vw,16rem);line-height:1;animation:drum .12s infinite alternate}
+@keyframes drum{from{transform:rotate(-8deg) scale(1)}to{transform:rotate(8deg) scale(1.08)}}
+.dots i{display:inline-block;font-style:normal;animation:blinkdot 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.3s}.dots i:nth-child(3){animation-delay:.6s}
+@keyframes blinkdot{0%,100%{opacity:.2}50%{opacity:1}}
+.tv-title h1{text-shadow:0 0 80px rgba(255,210,63,.45)}
+.stage.enter.tv-title h1{animation:rise .9s both}
+.stage.enter.tv-title .with{animation:rise .6s .3s both}
+@media (prefers-reduced-motion:reduce){.aurora i{animation:none}}
+.tv.show-cursor{cursor:auto}
+.tv-top{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:1.6vh 3vw;padding-left:max(3vw,env(safe-area-inset-left,0px));padding-right:max(3vw,env(safe-area-inset-right,0px))}
+.tv-brand{font-family:var(--display);font-weight:800;font-size:clamp(1rem,2.4vw,2rem);color:var(--accent);letter-spacing:.01em}
+.tv-brand small{color:var(--muted);font-family:var(--body);font-weight:600;font-size:.55em;margin-left:.8em;letter-spacing:.12em;text-transform:uppercase}
+.tv-round{font-size:clamp(.8rem,1.6vw,1.3rem);color:var(--muted);font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.tv-timer{display:none;align-items:center;gap:.6vw;font-family:var(--display);font-size:clamp(1.4rem,3.6vw,3.2rem);color:var(--fg)}
+.tv-timer.on{display:flex}
+.tv-timer .ring{width:clamp(36px,5vw,64px);height:clamp(36px,5vw,64px);border-radius:50%;background:conic-gradient(var(--accent) var(--p,100%),var(--panel2) 0)}
+.tv-timer.low{color:var(--hot)}
+.tv-timer.low .ring{background:conic-gradient(var(--hot) var(--p,100%),var(--panel2) 0)}
+.tv-main{min-height:0;display:flex;align-items:center;justify-content:center;padding:1vh 4vw;padding-left:max(4vw,env(safe-area-inset-left,0px));padding-right:max(4vw,env(safe-area-inset-right,0px))}
+.tv-bottom{display:flex;gap:1.2vw;padding:1.4vh 3vw 2vh;padding-left:max(3vw,env(safe-area-inset-left,0px));padding-right:max(3vw,env(safe-area-inset-right,0px))}
+.scorechip{flex:1;display:flex;align-items:center;justify-content:space-between;gap:1vw;background:var(--panel);border-radius:14px;padding:1.2vh 1.6vw;border-left:.6vw solid var(--tc);min-width:0}
+.scorechip .n{font-weight:700;font-size:clamp(.9rem,1.8vw,1.6rem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scorechip .s{font-family:var(--display);font-size:clamp(1.3rem,3vw,2.8rem);color:var(--tc)}
+.scorechip.ctrl{box-shadow:0 0 0 3px var(--tc) inset}
+.scorechip.locked{opacity:.45}
+.stage{width:100%;max-width:1700px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2.4vh}
+.stage .q{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,4.2vw,4.4rem);max-width:28ch;text-wrap:balance}
+.stage .q.sm{font-size:clamp(1.3rem,3.2vw,3.2rem)}
+.stage .ans{font-family:var(--display);font-size:clamp(1.5rem,4vw,4rem);color:var(--accent);background:var(--panel);border:3px solid var(--accent);border-radius:20px;padding:1.4vh 3vw;max-width:90%;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.stage .ans small{display:block;font-family:var(--body);font-weight:600;font-size:.4em;color:var(--muted);margin-top:.4em}
+.stage .sub{color:var(--muted);font-size:clamp(1rem,1.9vw,1.6rem);max-width:60ch}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.waiting{color:var(--muted);font-size:clamp(1rem,2vw,1.6rem)}
+.tv-title h1{font-size:clamp(3rem,9vw,9rem);color:var(--accent);line-height:.95}
+.tv-title h1 span{display:block;color:var(--fg);font-size:.42em;font-weight:500;letter-spacing:.06em;margin-top:.3em}
+.tv-title .with{color:var(--muted);font-size:clamp(1rem,2vw,1.6rem);letter-spacing:.14em;text-transform:uppercase}
+.tv-intro .rn{font-size:clamp(1rem,2vw,1.6rem);color:var(--hot);letter-spacing:.2em;text-transform:uppercase;font-weight:700}
+.tv-intro h2{font-size:clamp(2.6rem,7.5vw,7.5rem);color:var(--accent)}
+.tv-intro .rule{font-size:clamp(1.1rem,2.2vw,1.9rem);color:var(--fg);max-width:46ch;line-height:1.4}
+.tv-intro .pts{display:flex;gap:1.6vw;flex-wrap:wrap;justify-content:center}
+.pill{background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:.6vh 1.6vw;font-size:clamp(.9rem,1.6vw,1.3rem);font-weight:700}
+.pill b{color:var(--accent)}
+
+/* percent round */
+.guesses{display:flex;gap:1.6vw;flex-wrap:wrap;justify-content:center}
+.guess{background:var(--panel);border-top:.5vw solid var(--tc);border-radius:16px;padding:1.4vh 2.4vw;min-width:12vw}
+.guess .n{color:var(--muted);font-weight:600;font-size:clamp(.8rem,1.4vw,1.2rem)}
+.guess .g{font-family:var(--display);font-size:clamp(1.6rem,4vw,4rem);color:var(--tc)}
+.guess.win{box-shadow:0 0 0 3px var(--accent)}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(var(--cols,5),1fr);gap:1vw;width:100%;max-width:1700px;height:62vh}
+.board .cat{background:var(--hot);color:#1a0616;font-family:var(--display);font-weight:800;font-size:clamp(.9rem,1.9vw,1.9rem);border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:.6vh .6vw;line-height:1.05}
+.board .tile{background:var(--panel2);border:2px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:clamp(1.4rem,3.6vw,3.6rem);color:var(--accent)}
+.board .tile.used{background:transparent;border-color:var(--panel);color:transparent}
+.board .tile.open{background:var(--accent);color:#1a1200;animation:blink .8s ease-in-out infinite alternate}
+@keyframes blink{from{filter:brightness(1)}to{filter:brightness(1.35)}}
+.tileview{display:flex;flex-direction:column;align-items:center;gap:2.4vh;width:100%}
+.tileview .cat{color:var(--hot);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:clamp(.9rem,1.8vw,1.5rem)}
+.tileview .pts{font-family:var(--display);font-size:clamp(1.2rem,2.6vw,2.4rem);color:var(--accent)}
+.allin{font-family:var(--display);font-size:clamp(3rem,10vw,10rem);color:var(--hot);animation:pop .5s cubic-bezier(.2,1.4,.4,1);line-height:1}
+.allin small{display:block;font-size:.22em;color:var(--fg);font-family:var(--body);font-weight:600;letter-spacing:.2em;text-transform:uppercase}
+
+/* rank */
+.ranklist{display:grid;gap:1.2vh;width:min(100%,900px)}
+.rankrow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1.6vw;background:var(--panel);border-radius:14px;padding:1.2vh 2vw;font-size:clamp(1.1rem,2.4vw,2.2rem);font-weight:700;text-align:left}
+.rankrow .i{font-family:var(--display);color:var(--accent);width:1.6em}
+.rankrow .m{color:var(--muted);font-size:.65em;font-weight:600}
+.rankrow.rev{border:2px solid var(--good);animation:pop .3s}
+.rankrow.pending{opacity:.35}
+.pool{display:flex;flex-wrap:wrap;gap:1vw;justify-content:center}
+.pool .pill{font-size:clamp(1rem,2vw,1.8rem)}
+
+/* emoji */
+.emoji{font-size:clamp(3.5rem,12vw,12rem);line-height:1.15;letter-spacing:.06em}
+.buzzbar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(12vh + env(safe-area-inset-bottom,0px));z-index:4;font-family:var(--display);border-radius:999px;padding:1.2vh 3vw;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+.buzzbar.armed{font-size:clamp(.9rem,1.6vw,1.4rem);color:var(--muted);background:rgba(23,21,59,.8);border:2px solid var(--line)}
+.buzzbar.hit.bad{color:#fff}
+.buzzbar.wrap{white-space:normal;text-align:center;line-height:1.15;border-radius:24px}
+.buzzbar.hit{font-size:clamp(1.6rem,4vw,4rem);color:#120f2a;background:var(--tc);box-shadow:0 0 60px var(--tc);animation:popbar .4s cubic-bezier(.2,1.5,.4,1)}
+@keyframes popbar{from{transform:translateX(-50%) scale(.5);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+.buzzpad{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center;background:radial-gradient(60vw 60vw at 50% 45%,color-mix(in srgb,var(--tc) 25%,var(--bg)),var(--bg))}
+.buzzpad .bp-top{display:flex;gap:16px;justify-content:space-between;width:100%;max-width:420px;font-size:1rem}
+.bp-btn{width:min(78vw,78vh,420px);height:min(78vw,78vh,420px);border-radius:50%;background:var(--tc);color:#120f2a;font-family:var(--display);font-weight:800;font-size:min(16vw,16vh,86px);box-shadow:0 14px 0 color-mix(in srgb,var(--tc) 50%,#000),0 0 80px var(--tc);transition:transform .08s,box-shadow .08s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.bp-btn:active{transform:translateY(10px);box-shadow:0 4px 0 color-mix(in srgb,var(--tc) 50%,#000),0 0 40px var(--tc)}
+.bp-btn:disabled{opacity:.45;box-shadow:0 6px 0 color-mix(in srgb,var(--tc) 50%,#000);transform:none}
+.buzzpad.first .bp-btn{opacity:1;background:var(--accent);animation:bump 1s infinite alternate}
+.buzzpad.late .bp-btn{opacity:.3}
+.bp-status{font-family:var(--display);font-size:1.5rem;max-width:22ch;text-wrap:balance}
+.buzzpad.first .bp-status{color:var(--accent);font-size:2rem}
+.player{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;gap:18px;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center;background:radial-gradient(60vw 60vw at 50% 40%,color-mix(in srgb,var(--tc) 22%,var(--bg)),var(--bg))}
+.player .bp-top{display:flex;gap:16px;justify-content:space-between;width:100%;max-width:420px;font-size:1rem}
+.pl-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;width:100%;max-width:420px}
+.pl-big{font-size:4.5rem;line-height:1}
+.pl-h{font-size:2rem}
+.pl-q{font-size:1.25rem;font-weight:600;text-wrap:balance}
+.pl-timer{font-family:var(--display);font-size:2.6rem;color:var(--accent);line-height:1}
+.pl-timer.dim{color:var(--muted)}
+.pl-won{font-family:var(--display);font-size:1.8rem;color:var(--good)}
+.pl-won.zero{color:var(--muted);font-size:1.2rem}
+.pl-dots{font-size:2.2rem;letter-spacing:.2em;color:var(--accent);line-height:1}
+.player .field{width:100%}
+.rk-list{display:flex;flex-direction:column;gap:8px;width:100%}
+.rk-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:10px 12px;text-align:left;touch-action:none;user-select:none;-webkit-user-select:none;font-weight:600}
+.rk-row .i{font-family:var(--display);color:var(--accent);width:1.4em}
+.rk-row.drag{border-color:var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.5);transform:scale(1.02);position:relative;z-index:2}
+.rk-row.done.ok{border-color:var(--good)}.rk-row.done.no{border-color:var(--bad);opacity:.85}
+.rk-btns{display:flex;gap:4px}.rk-btns .btn{min-height:36px;padding:4px 10px}
+.bp-btn.first{opacity:1;background:var(--accent);animation:bump 1s infinite alternate}
+.bp-btn.late{opacity:.3}
+.bp-btn.queue{opacity:.75;background:var(--panel2);color:var(--fg);box-shadow:0 10px 0 var(--line)}
+.sub-pills{display:flex;gap:1vw;flex-wrap:wrap;justify-content:center}
+.flag{height:1em;width:1.45em;vertical-align:-.12em;border-radius:.08em;display:inline-block;box-shadow:0 0 0 .02em rgba(255,255,255,.3)}
+
+/* who am i */
+.hints{display:grid;gap:1.2vh;width:min(100%,1100px)}
+.hint{display:grid;grid-template-columns:auto 1fr;gap:1.6vw;align-items:center;background:var(--panel);border-radius:14px;padding:1.4vh 2vw;text-align:left;font-size:clamp(1.05rem,2.2vw,2rem);font-weight:600;animation:pop .3s}
+.hint .i{font-family:var(--display);color:var(--hot);font-size:1.3em}
+.wagers{display:flex;gap:1.2vw;flex-wrap:wrap;justify-content:center}
+.wagers .pill{border-color:var(--tc);color:var(--tc)}
+.wagers .pill.done{opacity:.4;text-decoration:line-through}
+
+/* scoreboard */
+.lead{display:grid;gap:1.6vh;width:min(100%,1000px)}
+.leadrow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:2vw;background:var(--panel);border-left:1vw solid var(--tc);border-radius:16px;padding:1.6vh 2.6vw;text-align:left}
+.leadrow .pos{font-family:var(--display);font-size:clamp(1.4rem,3vw,3rem);color:var(--muted)}
+.leadrow .n{font-family:var(--display);font-size:clamp(1.4rem,3.4vw,3.4rem)}
+.leadrow .s{font-family:var(--display);font-size:clamp(1.8rem,4.4vw,4.4rem);color:var(--tc)}
+.leadrow.first{background:linear-gradient(90deg,var(--panel2),var(--panel))}
+.leadrow .bar{height:.8vh;background:var(--tc);border-radius:4px;grid-column:2/4;transform-origin:left;animation:grow 1s cubic-bezier(.2,.8,.2,1)}
+@keyframes grow{from{transform:scaleX(0)}}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(11,10,31,.92);backdrop-filter:blur(6px);padding:4vh 4vw;z-index:5}
+.tapstart{position:absolute;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--bg);cursor:pointer}
+.tapstart h2{font-size:clamp(1.6rem,4vw,3rem);color:var(--accent)}
+.tapstart p{color:var(--muted);margin:0}
+.winner h1{font-size:clamp(3rem,9vw,9rem);color:var(--tc);animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
+.winner .eyebrow{font-size:clamp(1rem,2vw,1.6rem)}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.confetti i{position:absolute;top:-4vh;width:1.2vw;height:2.4vh;background:var(--c);animation:fall linear infinite;opacity:.9;border-radius:2px}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* ---------- Host remote ---------- */
+.host{min-height:100%;display:flex;flex-direction:column;padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+.h-top{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;background:var(--bg);border-bottom:1px solid var(--line);padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.h-scores{display:flex;gap:8px}
+.h-scores .sc{flex:1;min-width:0;background:var(--panel);border-radius:10px;padding:6px 10px;border-left:5px solid var(--tc)}
+.h-scores .sc .n{font-size:.78rem;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h-scores .sc .s{font-family:var(--display);font-size:1.3rem;color:var(--tc)}
+.h-scores .sc.ctrl{box-shadow:0 0 0 2px var(--tc) inset}
+.h-scores .sc.locked{opacity:.45}
+.h-status{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:.75rem;color:var(--muted);font-weight:600}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--dim);margin-right:6px;vertical-align:middle}
+.dot.on{background:var(--good)}
+.dot.warn{background:var(--accent)}
+.h-body{flex:1;display:flex;flex-direction:column;gap:14px;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.card{background:var(--panel);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card h3{font-size:1.15rem}
+.card .q{font-size:1.1rem;font-weight:600}
+.card .a{background:#2b1d00;border:2px solid var(--accent);color:var(--accent);border-radius:10px;padding:10px 12px;font-weight:700;font-size:1.1rem}
+.card .a.hid{color:transparent;text-shadow:0 0 14px var(--accent);user-select:none}
+.card .note{color:var(--muted);font-size:.9rem}
+.card .note b{color:var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1 1 auto;min-width:0}
+.btn{background:var(--panel2);border:2px solid var(--line);border-radius:12px;padding:12px 14px;font-weight:700;min-height:48px;text-align:center}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);color:#1a1200;border-color:var(--accent)}
+.btn.hot{background:var(--hot);color:#fff;border-color:var(--hot)}
+.btn.ghost{background:transparent}
+.btn.good{border-color:var(--good);color:var(--good)}
+.btn.bad{border-color:var(--bad);color:var(--bad)}
+.btn.team{border-color:var(--tc);color:var(--tc)}
+.btn.team.fill{background:var(--tc);color:#120f2a}
+.btn:disabled{opacity:.35}
+.btn.sm{padding:8px 10px;min-height:40px;font-size:.9rem}
+.teamrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.teamrow .lbl{font-weight:700;color:var(--tc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:.78rem;color:var(--muted);font-weight:600}
+.field input{background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:10px 12px;min-height:48px;width:100%}
+.field input[type=number]{font-family:var(--display);font-size:1.2rem}
+.h-tiles{display:grid;grid-template-columns:repeat(var(--cols,5),1fr);gap:6px}
+.h-tiles .c{font-size:.62rem;font-weight:700;color:var(--hot);text-align:center;line-height:1.1;min-height:2.4em;display:flex;align-items:center;justify-content:center}
+.h-tiles .t{background:var(--panel2);border:2px solid var(--line);border-radius:8px;min-height:44px;font-family:var(--display);color:var(--accent);font-size:1rem}
+.h-tiles .t.used{opacity:.25}
+.h-tiles .t.allin{border-color:var(--hot)}
+.h-nav{position:fixed;left:0;right:0;bottom:0;z-index:4;background:var(--panel);border-top:1px solid var(--line);padding-top:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:8px}
+.h-nav .r1{display:grid;grid-template-columns:1fr 2fr 1fr;gap:8px}
+.h-nav .r2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.h-nav .pos{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.h-nav .pos small{color:var(--muted);font-size:.72rem}
+.sheet{position:fixed;inset:0;z-index:6;background:rgba(11,10,31,.7);display:flex;align-items:flex-end}
+.sheet .in{background:var(--panel);border-radius:18px 18px 0 0;width:100%;max-height:85vh;overflow:auto;padding-top:14px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px}
+.sheet h3{font-size:1.2rem}
+.jump{display:flex;flex-direction:column;gap:6px}
+.jump button{text-align:left;padding:10px 12px;border-radius:10px;background:var(--panel2);display:flex;justify-content:space-between;gap:8px}
+.jump button.cur{outline:2px solid var(--accent)}
+.jump button small{color:var(--muted)}
+.log{font-size:.85rem;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.log b{color:var(--fg)}
+.setup .teams{display:flex;flex-direction:column;gap:10px}
+.swatches{display:flex;gap:8px}
+.swatches button{width:36px;height:36px;border-radius:50%;background:var(--c);border:3px solid transparent}
+.swatches button.on{border-color:#fff}
+.toast{position:fixed;left:50%;bottom:calc(170px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--accent);color:#1a1200;font-weight:700;padding:10px 16px;border-radius:999px;z-index:7;animation:pop .25s;max-width:90vw;text-align:center}
+@media (min-width:700px){.host{max-width:560px;margin:0 auto}.h-nav,.toast{max-width:560px;left:50%;transform:translateX(-50%);right:auto;width:100%}.toast{bottom:calc(170px + env(safe-area-inset-bottom,0px))}}
+</style>
+
+<div id="app"></div>
+<script>window.PLAYER_ONLY=true;</script>
+
+<script>
+/* =====================================================================
+   NATION WANTS TO GUESS — QUESTION BANK
+   This file is the single source of every question. The quiz reads it and
+   builds the Easy / Medium / Difficult packs from the "levels" tags, which
+   the host can also change on the phone under "Choose questions".
+
+   Fields
+     id       unique, never reuse one after deleting (the host's choices are
+              saved against it)
+     levels   any of "easy", "medium", "hard"; [] keeps a question in the
+              bank but out of every quiz
+     suggested  the level a parked question was written for; purely a hint
+              for the chooser, the "levels" tags decide what is played
+     note     host-only; shown on the phone, never on the TV
+   percent    q, a (a number, shown as a %), note
+   board      title (the misleading category name), meaning (host-only),
+              tiles (exactly four: pts, q, a), allIn (tile index 0-3 that is
+              the hidden All In wager; at most one category per level)
+   rank       q, items (correct order, top first), meta (one label per item)
+   emoji      emoji, a, note
+   who        a (the person), hints (five, cryptic first)
+   ===================================================================== */
+const QUESTION_BANK = {
+  "percent": [
+    {
+      "id": "p-e1",
+      "levels": ["easy"],
+      "q": "What percentage of the Earth's surface is covered by water?",
+      "a": 71,
+      "note": "About 71%. Oceans alone are about 97% of that water."
+    },
+    {
+      "id": "p-e2",
+      "levels": ["easy", "medium"],
+      "q": "What percentage of a watermelon is water?",
+      "a": 92,
+      "note": "About 92%. Cucumber is around 95%."
+    },
+    {
+      "id": "p-e3",
+      "levels": ["easy"],
+      "q": "What percentage of Indians live in Uttar Pradesh?",
+      "a": 17,
+      "note": "Census 2011: about 16.5%. If UP were a country it would be the fifth largest."
+    },
+    {
+      "id": "p-e4",
+      "levels": ["easy"],
+      "q": "What percentage of an adult human body is water?",
+      "a": 60,
+      "note": "Roughly 60%, a little more in babies."
+    },
+    {
+      "id": "p-e5",
+      "levels": ["easy", "medium"],
+      "q": "What percentage of the world's wild tigers live in India?",
+      "a": 75,
+      "note": "Around three quarters: about 3,700 of roughly 5,500 wild tigers (2022-23 estimates)."
+    },
+    {
+      "id": "p-e6",
+      "levels": ["easy"],
+      "q": "What percentage of India's land is forest cover?",
+      "a": 22,
+      "note": "India State of Forest Report 2021: 21.7%."
+    },
+    {
+      "id": "p-m1",
+      "levels": [],
+      "q": "What percentage of Indian adults describe themselves as vegetarian?",
+      "a": 39,
+      "note": "Pew Research, 2021. Far lower than most people assume."
+    },
+    {
+      "id": "p-m2",
+      "levels": ["medium"],
+      "q": "What percentage of married Indians say their marriage was arranged?",
+      "a": 93,
+      "note": "Lok Foundation / CSDS survey, 2018: 93%. Only 3% called it a love marriage."
+    },
+    {
+      "id": "p-m3",
+      "levels": ["medium"],
+      "q": "What percentage of Indian households own a car?",
+      "a": 8,
+      "note": "NFHS-5 (2019-21): about 7.5%. Two-wheelers: around 50%."
+    },
+    {
+      "id": "p-m4",
+      "levels": [],
+      "q": "What percentage of Indian households own a refrigerator?",
+      "a": 38,
+      "note": "NFHS-5: 38%. Television: 67%. Mobile phone: 93%."
+    },
+    {
+      "id": "p-m5",
+      "levels": [],
+      "q": "What percentage of the world's population lives in India?",
+      "a": 18,
+      "note": "About 17.8%. India overtook China in 2023."
+    },
+    {
+      "id": "p-m6",
+      "levels": [],
+      "q": "What percentage of Indians speak Hindi as their mother tongue?",
+      "a": 44,
+      "note": "Census 2011: 43.6%. Bengali is next at about 8%."
+    },
+    {
+      "id": "p-h1",
+      "levels": ["hard"],
+      "q": "What percentage of India's GDP comes from agriculture?",
+      "a": 18,
+      "note": "Around 18% (2022-23), while it employs over 40% of workers."
+    },
+    {
+      "id": "p-h2",
+      "levels": ["medium", "hard"],
+      "q": "What percentage of members in the current Lok Sabha are women?",
+      "a": 14,
+      "note": "74 of 543 in the 18th Lok Sabha: 13.6%."
+    },
+    {
+      "id": "p-h3",
+      "levels": ["hard"],
+      "q": "What percentage of India's electricity generation comes from coal?",
+      "a": 75,
+      "note": "Around 73-75% in 2023, despite the solar boom."
+    },
+    {
+      "id": "p-h4",
+      "levels": ["hard"],
+      "q": "What percentage of Indians belong to Scheduled Tribes?",
+      "a": 9,
+      "note": "Census 2011: 8.6%. Scheduled Castes: 16.6%."
+    },
+    {
+      "id": "p-h5",
+      "levels": ["hard"],
+      "q": "What percentage of the world's milk is produced in India?",
+      "a": 24,
+      "note": "About 24%, the largest producer, thanks to Operation Flood."
+    },
+    {
+      "id": "p-h6",
+      "levels": ["hard"],
+      "q": "What percentage of Indians hold a valid passport?",
+      "a": 7,
+      "note": "Roughly 9-10 crore passports in a population of 140 crore: about 7%."
+    },
+    {
+      "id": "p-n1",
+      "q": "What percentage of India's workforce still works in agriculture?",
+      "a": 46,
+      "note": "PLFS 2022-23: about 45.8%. Agriculture is under 20% of GDP.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "p-n2",
+      "q": "What percentage of Indian women aged 15 and over are in the workforce?",
+      "a": 37,
+      "note": "PLFS 2022-23: 37%. One of the lowest among large economies.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "p-n3",
+      "q": "What percentage of Indian men say they drink alcohol?",
+      "a": 19,
+      "note": "NFHS-5: 19% of men, 1% of women.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "p-n4",
+      "q": "What percentage of Mumbai's population lives in slums?",
+      "a": 41,
+      "note": "Census 2011: 41.3%, about 5.2 million people.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "p-n5",
+      "q": "What percentage of Indians can speak English?",
+      "a": 10,
+      "note": "Census 2011: about 10.6%, almost all as a second or third language.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "p-n6",
+      "q": "What percentage of Indians are under 25?",
+      "a": 47,
+      "note": "Census 2011: about 47%. Still above 40% today; median age 28.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "p-n7",
+      "q": "What percentage of Lok Sabha seats are reserved for Scheduled Castes and Tribes?",
+      "a": 24,
+      "note": "131 of 543 seats: 84 SC + 47 ST, about 24%.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "p-n8",
+      "q": "What percentage of Indians are aged 60 or over?",
+      "a": 10,
+      "note": "About 10.5% in 2021, projected to reach 20% by 2050.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "p-n9",
+      "q": "What percentage of India's goods exports go to the United States?",
+      "a": 18,
+      "note": "2023-24: about 17-18%, the largest single destination.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "p-n10",
+      "q": "What percentage of India's GDP comes from services?",
+      "a": 54,
+      "note": "Around 53-55% in 2023-24. Industry is roughly 28%.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "p-n11",
+      "q": "What percentage of the world's rice is grown in India?",
+      "a": 26,
+      "note": "About 26-27%, second only to China.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "p-n12",
+      "q": "What percentage of Indian households cook mainly with LPG or another clean fuel?",
+      "a": 59,
+      "note": "NFHS-5 (2019-21): 59%. Was 44% five years earlier.",
+      "levels": [],
+      "suggested": "hard"
+    }
+  ],
+  "board": [
+    {
+      "id": "b-e1",
+      "levels": ["easy"],
+      "title": "Apple Products",
+      "meaning": "Fruit. Just fruit.",
+      "tiles": [
+        { "pts": 100, "q": "Which fruit is the national fruit of India?", "a": "Mango" },
+        { "pts": 200, "q": "Which fruit shares its name with a colour?", "a": "Orange" },
+        { "pts": 300, "q": "Bananas are famous for which mineral, the one that helps with cramps?", "a": "Potassium" },
+        { "pts": 400, "q": "Jackfruit is the state fruit of Kerala and which other state?", "a": "Tamil Nadu" }
+      ]
+    },
+    {
+      "id": "b-e2",
+      "levels": ["easy"],
+      "title": "Chai Pe Charcha",
+      "meaning": "Tea, not politics.",
+      "tiles": [
+        { "pts": 100, "q": "Which Indian state produces the most tea?", "a": "Assam" },
+        { "pts": 200, "q": "Name any two of the spices usually found in masala chai.", "a": "Cardamom, ginger, cloves, cinnamon, black pepper (any two)" },
+        { "pts": 300, "q": "Darjeeling tea is grown in which state?", "a": "West Bengal" },
+        { "pts": 400, "q": "Which country drinks the most tea per person: Turkey, India or the UK?", "a": "Turkey" }
+      ],
+      "allIn": 3
+    },
+    {
+      "id": "b-e3",
+      "levels": ["easy"],
+      "title": "Cold Play",
+      "meaning": "Cold things, not the band.",
+      "tiles": [
+        { "pts": 100, "q": "Which Indian cricket captain is nicknamed Captain Cool?", "a": "M. S. Dhoni" },
+        { "pts": 200, "q": "Which continent has no countries and no permanent population?", "a": "Antarctica" },
+        { "pts": 300, "q": "Water freezes at 0 degrees Celsius. What is that in Fahrenheit?", "a": "32" },
+        { "pts": 400, "q": "In the film Frozen, what kind of creature is Olaf?", "a": "A snowman" }
+      ]
+    },
+    {
+      "id": "b-e4",
+      "levels": ["easy", "medium"],
+      "title": "Startup India",
+      "meaning": "Things whose name starts with 'India'.",
+      "tiles": [
+        { "pts": 100, "q": "India Gate was built to honour Indian soldiers who died in which war?", "a": "The First World War (and the Third Anglo-Afghan War)" },
+        { "pts": 200, "q": "Air India began life in 1932 under which name?", "a": "Tata Airlines (Tata Air Services)" },
+        { "pts": 300, "q": "India Pale Ale was brewed extra strong and hoppy so that it could survive what?", "a": "The sea voyage from Britain to India" },
+        { "pts": 400, "q": "Indian Standard Time is set from which line of longitude, which passes near Mirzapur?", "a": "82.5° East" }
+      ]
+    },
+    {
+      "id": "b-e5",
+      "levels": ["easy", "medium"],
+      "title": "Monkey Business",
+      "meaning": "Monkeys, Hanuman and monkey kings.",
+      "tiles": [
+        { "pts": 100, "q": "What did Hanuman carry across the sky to save Lakshman?", "a": "A mountain (for the Sanjeevani herb)" },
+        { "pts": 200, "q": "In The Jungle Book, what is the name of the orangutan king?", "a": "King Louie" },
+        { "pts": 300, "q": "The Jakhoo Hanuman temple, famous for its monkeys, is in which hill station?", "a": "Shimla" },
+        { "pts": 400, "q": "The Galta Ji 'monkey temple' is in which Rajasthan city?", "a": "Jaipur" }
+      ]
+    },
+    {
+      "id": "b-m1",
+      "levels": [],
+      "title": "Large Language Models",
+      "meaning": "Words and languages, not AI.",
+      "tiles": [
+        { "pts": 100, "q": "Which Indian politician made the word 'farrago' trend in 2017?", "a": "Shashi Tharoor" },
+        { "pts": 200, "q": "The English word 'shampoo' comes from a Hindi word meaning what?", "a": "To press or massage (champo)" },
+        { "pts": 300, "q": "The English word 'juggernaut' comes from the chariot festival of which deity?", "a": "Jagannath (of Puri)" },
+        { "pts": 400, "q": "Which Indian language is written in the Ol Chiki script?", "a": "Santali" }
+      ]
+    },
+    {
+      "id": "b-m2",
+      "levels": ["medium"],
+      "title": "Spicy Takes",
+      "meaning": "Chillies and street food, not opinions.",
+      "tiles": [
+        { "pts": 100, "q": "Which street food's name comes from the Hindi word for 'to lick'?", "a": "Chaat" },
+        { "pts": 200, "q": "Chillies are now India's thing, but which continent did they originally come from?", "a": "The Americas (brought by the Portuguese)" },
+        { "pts": 300, "q": "Which state's Guntur district is called India's chilli capital?", "a": "Andhra Pradesh" },
+        { "pts": 400, "q": "Vindaloo takes its name from two Portuguese words meaning what?", "a": "Wine (vinegar) and garlic" }
+      ]
+    },
+    {
+      "id": "b-m3",
+      "levels": ["medium"],
+      "title": "Ghar Wapsi",
+      "meaning": "Homecomings and returns of all kinds.",
+      "tiles": [
+        { "pts": 100, "q": "In the film Swades, Shah Rukh Khan's character returns to India from which organisation?", "a": "NASA" },
+        { "pts": 200, "q": "Before Nvidia, in 2023 another company's CEO was also fired and then reappointed within days. Name the company and the CEO.", "a": "OpenAI, Sam Altman" },
+        { "pts": 300, "q": "Which astronaut came home in March 2025 after an eight-day trip turned into nine months?", "a": "Sunita Williams" },
+        { "pts": 400, "q": "Steve Jobs came home to Apple in 1997 when it bought the company he had founded in exile. Name that company.", "a": "NeXT" }
+      ],
+      "allIn": 2
+    },
+    {
+      "id": "b-m4",
+      "levels": ["medium"],
+      "title": "Cheap Thrills",
+      "meaning": "Famously cheap things, and one very expensive one.",
+      "tiles": [
+        { "pts": 100, "q": "Which airline, started in 2003 by a former army captain, made 500-rupee fares a thing in India?", "a": "Air Deccan (Captain G. R. Gopinath)" },
+        { "pts": 200, "q": "Everyone knows Tata made the Nano, the one-lakh car. In which year was it launched?", "a": "2008" },
+        { "pts": 300, "q": "What is the smallest coin that is still legal tender in India?", "a": "50 paise" },
+        { "pts": 400, "q": "The opposite of cheap: whose painting 'The Story Teller' became the most expensive Indian artwork at auction in 2023?", "a": "Amrita Sher-Gil (about 61.8 crore)" }
+      ]
+    },
+    {
+      "id": "b-m5",
+      "levels": [],
+      "title": "Over the Moon",
+      "meaning": "Literally the Moon.",
+      "tiles": [
+        { "pts": 100, "q": "What was the name of the lander that put India near the Moon's south pole in 2023?", "a": "Vikram (Chandrayaan-3)" },
+        { "pts": 200, "q": "The Taj Mahal opens for night viewing around which lunar event each month?", "a": "The full moon" },
+        { "pts": 300, "q": "Apart from Mercury, which planet in our Solar System has no moons?", "a": "Venus" },
+        { "pts": 400, "q": "Which 2008 ISRO mission found evidence of water molecules on the Moon?", "a": "Chandrayaan-1" }
+      ]
+    },
+    {
+      "id": "b-h1",
+      "levels": ["hard"],
+      "title": "Bench Press",
+      "meaning": "Courts and judges, not the gym.",
+      "tiles": [
+        { "pts": 100, "q": "How many judges does the Supreme Court of India have at full strength?", "a": "34" },
+        { "pts": 200, "q": "Which 1973 case gave us the 'basic structure' doctrine of the Constitution?", "a": "Kesavananda Bharati" },
+        { "pts": 300, "q": "Who was the first woman judge of the Supreme Court of India?", "a": "Justice Fathima Beevi" },
+        { "pts": 400, "q": "In which year did the Supreme Court move out of Parliament House into its own building?", "a": "1958" }
+      ]
+    },
+    {
+      "id": "b-h2",
+      "levels": ["hard"],
+      "title": "Family Drama",
+      "meaning": "The Mughals, who had plenty.",
+      "tiles": [
+        { "pts": 100, "q": "Who was the first Mughal emperor?", "a": "Babur" },
+        { "pts": 200, "q": "Which Mughal emperor was imprisoned in Agra Fort by his own son?", "a": "Shah Jahan" },
+        { "pts": 300, "q": "Akbar's capital, abandoned within years for lack of water, was which city?", "a": "Fatehpur Sikri" },
+        { "pts": 400, "q": "Which Mughal emperor ruled the longest, nearly 49 years?", "a": "Aurangzeb" }
+      ]
+    },
+    {
+      "id": "b-h3",
+      "levels": ["hard"],
+      "title": "Silicon Valley",
+      "meaning": "Silicon, chips and the people who make them.",
+      "tiles": [
+        { "pts": 100, "q": "Which Indian city is called the Silicon Valley of India?", "a": "Bengaluru" },
+        { "pts": 200, "q": "What is the atomic number of silicon?", "a": "14" },
+        { "pts": 300, "q": "F. C. Kohli, the father of the Indian IT industry, built which company?", "a": "TCS (Tata Consultancy Services)" },
+        { "pts": 400, "q": "Tata's semiconductor fab, announced in 2024, is being built in which Gujarat town?", "a": "Dholera" }
+      ]
+    },
+    {
+      "id": "b-h4",
+      "levels": ["hard"],
+      "title": "Sound of Music",
+      "meaning": "Indian classical music.",
+      "tiles": [
+        { "pts": 100, "q": "How many swaras are there in the Indian sargam?", "a": "Seven" },
+        { "pts": 200, "q": "Which instrument made Zakir Hussain famous?", "a": "Tabla" },
+        { "pts": 300, "q": "Which Hindustani raga is traditionally performed at dawn and shares its name with a form of Shiva?", "a": "Bhairav" },
+        { "pts": 400, "q": "The Carnatic 'trinity' is Tyagaraja, Muthuswami Dikshitar and who?", "a": "Syama Sastri" }
+      ],
+      "allIn": 2
+    },
+    {
+      "id": "b-h5",
+      "levels": ["hard"],
+      "title": "Bank Holiday",
+      "meaning": "Banks and banknotes.",
+      "tiles": [
+        { "pts": 100, "q": "Which space mission is pictured on the back of the 2,000 rupee note?", "a": "Mangalyaan" },
+        { "pts": 200, "q": "In which year were 14 major Indian banks nationalised?", "a": "1969" },
+        { "pts": 300, "q": "Which bank, founded in 1770, was the first in India?", "a": "Bank of Hindustan" },
+        { "pts": 400, "q": "Whose signature is on the one rupee note, since it is not issued by the RBI?", "a": "The Finance Secretary" }
+      ]
+    },
+    {
+      "id": "b-n1",
+      "title": "Game of Thrones",
+      "meaning": "Indian royals and their actual thrones.",
+      "tiles": [
+        { "pts": 100, "q": "Nadir Shah looted the Peacock Throne in 1739 from which city?", "a": "Delhi" },
+        { "pts": 200, "q": "The Wadiyar dynasty ruled from which city, famous for its palace and Dussehra?", "a": "Mysore" },
+        { "pts": 300, "q": "Which princely state held out after 1947 until 'Operation Polo' in 1948?", "a": "Hyderabad" },
+        { "pts": 400, "q": "Which princely state was the largest by area at independence?", "a": "Jammu and Kashmir (ahead of Hyderabad)" }
+      ],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "b-n2",
+      "title": "Fast & Furious",
+      "meaning": "Speed records and racing.",
+      "tiles": [
+        { "pts": 100, "q": "Who bowled the fastest recorded ball in cricket, 161.3 km/h in 2003?", "a": "Shoaib Akhtar" },
+        { "pts": 200, "q": "Which bird is the fastest animal on Earth, in a dive?", "a": "Peregrine falcon" },
+        { "pts": 300, "q": "Which Indian circuit near Delhi hosted Formula 1 from 2011 to 2013?", "a": "Buddh International Circuit (Greater Noida)" },
+        { "pts": 400, "q": "Who became India's first Formula 1 driver, in 2005?", "a": "Narain Karthikeyan" }
+      ],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "b-n3",
+      "title": "Spotify Wrapped",
+      "meaning": "Indian music, film and otherwise.",
+      "tiles": [
+        { "pts": 100, "q": "Who sang 'Kesariya' from Brahmastra?", "a": "Arijit Singh" },
+        { "pts": 200, "q": "'Jai Ho' won the Oscar for Best Original Song for which film?", "a": "Slumdog Millionaire" },
+        { "pts": 300, "q": "Which composer wrote 'Naatu Naatu', the 2023 Oscar winner?", "a": "M. M. Keeravani" },
+        { "pts": 400, "q": "Lucky Ali's 'O Sanam' came from which 1996 album?", "a": "Sunoh" }
+      ],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "b-n4",
+      "title": "Bull Run",
+      "meaning": "Wildlife, not the stock market.",
+      "tiles": [
+        { "pts": 100, "q": "Which Indian state has the most tigers?", "a": "Madhya Pradesh" },
+        { "pts": 200, "q": "The Gir forest is the last wild home of which animal?", "a": "The Asiatic lion" },
+        { "pts": 300, "q": "The Nilgiri tahr is the state animal of which state?", "a": "Tamil Nadu" },
+        { "pts": 400, "q": "Project Cheetah brought cheetahs to Kuno from which two countries?", "a": "Namibia and South Africa" }
+      ],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "b-n5",
+      "title": "Reply All",
+      "meaning": "Letters, stamps and the post.",
+      "tiles": [
+        { "pts": 100, "q": "What does PIN stand for in PIN code?", "a": "Postal Index Number" },
+        { "pts": 200, "q": "Hikkim, home to the world's highest post office, is in which state?", "a": "Himachal Pradesh" },
+        { "pts": 300, "q": "Whose letters to his daughter from prison became the book 'Glimpses of World History'?", "a": "Jawaharlal Nehru" },
+        { "pts": 400, "q": "The Scinde Dawk, Asia's first postage stamp, was issued in which year?", "a": "1852" }
+      ],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "b-n6",
+      "title": "Prime Time",
+      "meaning": "Prime numbers and prime ministers.",
+      "tiles": [
+        { "pts": 100, "q": "Which is the only even prime number?", "a": "2" },
+        { "pts": 200, "q": "Which Prime Minister's first term lasted just 13 days, in 1996?", "a": "Atal Bihari Vajpayee" },
+        { "pts": 300, "q": "Which Prime Minister served two full terms without ever being a Lok Sabha member?", "a": "Manmohan Singh (Rajya Sabha)" },
+        { "pts": 400, "q": "Who was the first Prime Minister born after independence?", "a": "Narendra Modi (born 1950)" }
+      ],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "b-n7",
+      "title": "Cloud Computing",
+      "meaning": "Weather and the monsoon.",
+      "tiles": [
+        { "pts": 100, "q": "India's summer monsoon arrives on which wind: southwest or northeast?", "a": "Southwest" },
+        { "pts": 200, "q": "Mawsynram, the wettest place on Earth, is in which state?", "a": "Meghalaya" },
+        { "pts": 300, "q": "Which Pacific warming event tends to weaken the Indian monsoon?", "a": "El Niño" },
+        { "pts": 400, "q": "India's weather supercomputer carries a Sanskrit name meaning 'sun'. What is it?", "a": "Pratyush" }
+      ],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "b-n8",
+      "title": "Supreme Leader",
+      "meaning": "Presidents of India.",
+      "tiles": [
+        { "pts": 100, "q": "Who was the first President of India?", "a": "Dr. Rajendra Prasad" },
+        { "pts": 200, "q": "Who was India's first woman President?", "a": "Pratibha Patil" },
+        { "pts": 300, "q": "Which President's birthday is celebrated as Teachers' Day?", "a": "Dr. S. Radhakrishnan" },
+        { "pts": 400, "q": "Which President, in office 1997 to 2002, was the first from a Dalit background?", "a": "K. R. Narayanan" }
+      ],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "b-n9",
+      "title": "Unicorn Hunting",
+      "meaning": "Indian startups.",
+      "tiles": [
+        { "pts": 100, "q": "Flipkart was bought in 2018 by which American retailer?", "a": "Walmart" },
+        { "pts": 200, "q": "Who founded Paytm?", "a": "Vijay Shekhar Sharma" },
+        { "pts": 300, "q": "Which ad-tech company became India's first unicorn, in 2011?", "a": "InMobi" },
+        { "pts": 400, "q": "Zepto's two founders dropped out of which American university?", "a": "Stanford" }
+      ],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "b-n10",
+      "title": "Lost in Translation",
+      "meaning": "Indian languages and scripts.",
+      "tiles": [
+        { "pts": 100, "q": "What is the official language of Goa?", "a": "Konkani" },
+        { "pts": 200, "q": "Which Indian language has the oldest surviving literature, the Sangam poems?", "a": "Tamil" },
+        { "pts": 300, "q": "In which script is Punjabi written in India?", "a": "Gurmukhi" },
+        { "pts": 400, "q": "Which language's name comes from a Turkic word for 'army camp'?", "a": "Urdu (from 'ordu')" }
+      ],
+      "levels": [],
+      "suggested": "hard"
+    }
+  ],
+  "rank": [
+    {
+      "id": "r-e1",
+      "levels": ["easy"],
+      "q": "Rank these countries by population, biggest first",
+      "items": ["India", "United States", "Brazil", "Japan", "Australia"],
+      "meta": ["143 crore", "34 crore", "22 crore", "12 crore", "2.6 crore"]
+    },
+    {
+      "id": "r-e2",
+      "levels": ["easy"],
+      "q": "Rank these planets by distance from the Sun, nearest first",
+      "items": ["Mercury", "Earth", "Mars", "Jupiter", "Neptune"],
+      "meta": ["1st", "3rd", "4th", "5th", "8th"]
+    },
+    {
+      "id": "r-e3",
+      "levels": ["easy", "medium"],
+      "q": "Rank these by top speed, fastest first",
+      "items": ["Cheetah", "Racehorse", "Usain Bolt", "Elephant", "Tortoise"],
+      "meta": ["~110 km/h", "~70 km/h", "~44 km/h", "~40 km/h", "<1 km/h"]
+    },
+    {
+      "id": "r-e4",
+      "levels": ["easy"],
+      "q": "Rank these Indian rivers by length, longest first",
+      "items": ["Ganga", "Godavari", "Krishna", "Narmada", "Kaveri"],
+      "meta": ["2,525 km", "1,465 km", "1,400 km", "1,312 km", "800 km"]
+    },
+    {
+      "id": "r-m1",
+      "levels": [],
+      "q": "Rank these films by release year, oldest first",
+      "items": ["Sholay", "Mr. India", "Dilwale Dulhania Le Jayenge", "Lagaan", "3 Idiots"],
+      "meta": ["1975", "1987", "1995", "2001", "2009"]
+    },
+    {
+      "id": "r-m2",
+      "levels": ["medium"],
+      "q": "Rank these cities from west to east",
+      "items": ["Jaipur", "Delhi", "Lucknow", "Patna", "Guwahati"],
+      "meta": ["75.8° E", "77.2° E", "80.9° E", "85.1° E", "91.7° E"]
+    },
+    {
+      "id": "r-m3",
+      "levels": ["medium"],
+      "q": "Rank these films by worldwide box office, highest first",
+      "items": ["Dangal", "Baahubali 2", "RRR", "Pathaan", "3 Idiots"],
+      "meta": ["~2,000 cr", "~1,800 cr", "~1,200 cr", "~1,050 cr", "~400 cr"],
+      "note": "Gross figures as commonly reported; the order is what matters."
+    },
+    {
+      "id": "r-m4",
+      "levels": ["medium"],
+      "q": "Rank these states by population density, most crowded first",
+      "items": ["Bihar", "West Bengal", "Kerala", "Uttar Pradesh", "Maharashtra"],
+      "meta": ["1,106 / km²", "1,028 / km²", "860 / km²", "829 / km²", "365 / km²"],
+      "note": "Census 2011. Bihar beating Kerala surprises people."
+    },
+    {
+      "id": "r-h1",
+      "levels": [],
+      "q": "Rank these states by area, largest first",
+      "items": ["Rajasthan", "Madhya Pradesh", "Maharashtra", "Uttar Pradesh", "Gujarat"],
+      "meta": ["3.42 lakh km²", "3.08 lakh km²", "3.07 lakh km²", "2.40 lakh km²", "1.96 lakh km²"]
+    },
+    {
+      "id": "r-h2",
+      "levels": [],
+      "q": "Rank these institutions by founding year, oldest first",
+      "items": ["Tata Steel", "Air India", "Reserve Bank of India", "ISRO", "Infosys"],
+      "meta": ["1907", "1932 (as Tata Airlines)", "1935", "1969", "1981"]
+    },
+    {
+      "id": "r-h3",
+      "levels": ["medium"],
+      "q": "Rank these peaks by height, tallest first",
+      "items": ["Everest", "K2", "Kangchenjunga", "Nanda Devi", "Kailash"],
+      "meta": ["8,849 m", "8,611 m", "8,586 m", "7,816 m", "6,638 m"]
+    },
+    {
+      "id": "r-h4",
+      "levels": [],
+      "q": "Rank these languages by native speakers in India, most first",
+      "items": ["Hindi", "Bengali", "Marathi", "Telugu", "Tamil"],
+      "meta": ["52.8 crore", "9.7 crore", "8.3 crore", "8.1 crore", "6.9 crore"],
+      "note": "Census 2011. Marathi and Telugu are close."
+    },
+    {
+      "id": "r-n1",
+      "q": "Rank these cities by population within city limits, biggest first",
+      "items": ["Mumbai", "Delhi", "Bengaluru", "Hyderabad", "Ahmedabad"],
+      "meta": ["1.24 crore", "1.10 crore", "84 lakh", "68 lakh", "56 lakh"],
+      "note": "Census 2011, city proper. Delhi's urban area is bigger than Mumbai's, so expect an argument.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "r-n2",
+      "q": "Rank these Indian launches by year, oldest first",
+      "items": ["Flipkart", "Zomato", "Ola", "Swiggy", "Jio"],
+      "meta": ["2007", "2008", "2010", "2014", "2016"],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "r-n3",
+      "q": "Rank these states by area, smallest first",
+      "items": ["Goa", "Sikkim", "Tripura", "Nagaland", "Manipur"],
+      "meta": ["3,702 km²", "7,096 km²", "10,486 km²", "16,579 km²", "22,327 km²"],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "r-n4",
+      "q": "Rank these actors by age, oldest first",
+      "items": ["Amitabh Bachchan", "Anil Kapoor", "Shah Rukh Khan", "Ranbir Kapoor", "Alia Bhatt"],
+      "meta": ["born 1942", "born 1956", "born 1965", "born 1982", "born 1993"],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "r-n5",
+      "q": "Rank these planets by size, largest first",
+      "items": ["Jupiter", "Saturn", "Uranus", "Neptune", "Earth"],
+      "meta": ["139,820 km", "116,460 km", "50,724 km", "49,244 km", "12,742 km"],
+      "note": "Uranus just edges Neptune on diameter; Neptune is heavier.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "r-n6",
+      "q": "Rank these freedom-movement events in order, earliest first",
+      "items": ["Jallianwala Bagh massacre", "Non-Cooperation Movement", "Dandi March", "Quit India Movement", "Partition"],
+      "meta": ["1919", "1920", "1930", "1942", "1947"],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "r-n7",
+      "q": "Rank these dams by height, tallest first",
+      "items": ["Tehri", "Bhakra Nangal", "Sardar Sarovar", "Nagarjuna Sagar", "Hirakud"],
+      "meta": ["260 m", "226 m", "163 m", "124 m", "61 m"],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "r-n8",
+      "q": "Rank these Nobel laureates by the year of their prize, earliest first",
+      "items": ["Rabindranath Tagore", "C. V. Raman", "Mother Teresa", "Amartya Sen", "Abhijit Banerjee"],
+      "meta": ["1913", "1930", "1979", "1998", "2019"],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "r-n9",
+      "q": "Rank these airports by passengers, busiest first",
+      "items": ["Delhi", "Mumbai", "Bengaluru", "Hyderabad", "Chennai"],
+      "meta": ["~7.4 crore", "~5.3 crore", "~3.7 crore", "~2.5 crore", "~2.1 crore"],
+      "note": "2023-24 figures.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "r-n10",
+      "q": "Rank these elements by atomic number, lowest first",
+      "items": ["Hydrogen", "Carbon", "Oxygen", "Iron", "Gold"],
+      "meta": ["1", "6", "8", "26", "79"],
+      "levels": [],
+      "suggested": "hard"
+    }
+  ],
+  "emoji": [
+    {
+      "id": "e-e1",
+      "levels": ["easy"],
+      "emoji": "🦁👑🌅",
+      "a": "The Lion King"
+    },
+    {
+      "id": "e-e2",
+      "levels": ["easy"],
+      "emoji": "🕷️👨🏙️",
+      "a": "Spider-Man"
+    },
+    {
+      "id": "e-e3",
+      "levels": ["easy"],
+      "emoji": "❄️👸⛄",
+      "a": "Frozen"
+    },
+    {
+      "id": "e-e4",
+      "levels": ["easy"],
+      "emoji": "🐠🔍🌊",
+      "a": "Finding Nemo"
+    },
+    {
+      "id": "e-e5",
+      "levels": ["easy"],
+      "emoji": "🦖🏝️🚙",
+      "a": "Jurassic Park"
+    },
+    {
+      "id": "e-e6",
+      "levels": ["easy", "medium"],
+      "emoji": "🏏🇬🇧🌧️",
+      "a": "Lagaan"
+    },
+    {
+      "id": "e-e7",
+      "levels": ["easy"],
+      "emoji": "🚽💑🏡",
+      "a": "Toilet: Ek Prem Katha"
+    },
+    {
+      "id": "e-e8",
+      "levels": ["easy"],
+      "emoji": "🧞‍♂️🪔🧹",
+      "a": "Aladdin"
+    },
+    {
+      "id": "e-m1",
+      "levels": ["easy"],
+      "emoji": "🏃‍♂️🥛🥛",
+      "a": "Bhaag Milkha Bhaag",
+      "note": "Bhaag, milk-aa, bhaag."
+    },
+    {
+      "id": "e-m2",
+      "levels": ["medium"],
+      "emoji": "🚗🇪🇸🍅🪂",
+      "a": "Zindagi Na Milegi Dobara",
+      "note": "Road trip, Spain, La Tomatina, skydiving."
+    },
+    {
+      "id": "e-m3",
+      "levels": [],
+      "emoji": "☎️📞💰🤪",
+      "a": "Hera Pheri",
+      "note": "The wrong number and the ransom."
+    },
+    {
+      "id": "e-m4",
+      "levels": ["medium"],
+      "emoji": "👩🇺🇸📚🗣️",
+      "a": "English Vinglish"
+    },
+    {
+      "id": "e-m5",
+      "levels": ["medium"],
+      "emoji": "🎤🏚️🧢",
+      "a": "Gully Boy"
+    },
+    {
+      "id": "e-m6",
+      "levels": [],
+      "emoji": "👻👩🚫🧔",
+      "a": "Stree",
+      "note": "The ghost who takes the men."
+    },
+    {
+      "id": "e-m7",
+      "levels": ["medium"],
+      "emoji": "🐒🇮🇳👧🇵🇰",
+      "a": "Bajrangi Bhaijaan",
+      "note": "Bajrangi is Hanuman, hence the monkey."
+    },
+    {
+      "id": "e-m8",
+      "levels": ["medium"],
+      "emoji": "🐯⛵🌊",
+      "a": "Life of Pi"
+    },
+    {
+      "id": "e-h1",
+      "levels": ["hard"],
+      "emoji": "🍱💌🚆",
+      "a": "The Lunchbox"
+    },
+    {
+      "id": "e-h2",
+      "levels": ["medium", "hard"],
+      "emoji": "🤰🔍🎭",
+      "a": "Kahaani"
+    },
+    {
+      "id": "e-h3",
+      "levels": ["hard"],
+      "emoji": "👰💔✈️🇫🇷",
+      "a": "Queen"
+    },
+    {
+      "id": "e-h4",
+      "levels": ["hard"],
+      "emoji": "🎀⚖️🚫",
+      "a": "Pink"
+    },
+    {
+      "id": "e-h5",
+      "levels": ["medium", "hard"],
+      "emoji": "🎲🔴🟢🔵🟡",
+      "a": "Ludo"
+    },
+    {
+      "id": "e-h6",
+      "levels": ["medium", "hard"],
+      "emoji": "🎸💔🎤",
+      "a": "Rockstar"
+    },
+    {
+      "id": "e-h7",
+      "levels": ["medium", "hard"],
+      "emoji": "🙈🎹🔪",
+      "a": "Andhadhun"
+    },
+    {
+      "id": "e-h8",
+      "levels": ["hard"],
+      "emoji": "📅💣☎️",
+      "a": "A Wednesday"
+    },
+    {
+      "id": "e-n1",
+      "emoji": "🚆🇨🇭💑🌾",
+      "a": "Dilwale Dulhania Le Jayenge",
+      "note": "Train, Europe, the couple, the mustard fields.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "e-n2",
+      "emoji": "🧠❌📸🔪",
+      "a": "Ghajini",
+      "note": "Memory loss, Polaroids, revenge.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "e-n3",
+      "emoji": "🗽❤️💊",
+      "a": "Kal Ho Naa Ho",
+      "note": "New York, love, the illness.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "e-n4",
+      "emoji": "🚂👩🤪🏔️",
+      "a": "Jab We Met",
+      "note": "Geet misses the train.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "e-n5",
+      "emoji": "👻💃🏰",
+      "a": "Bhool Bhulaiyaa",
+      "note": "Manjulika in the haveli.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "e-n6",
+      "emoji": "🕶️💊🐇🕳️",
+      "a": "The Matrix",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "e-n7",
+      "emoji": "🎈🏠👴",
+      "a": "Up",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "e-n8",
+      "emoji": "🧑‍🚀🕰️🌽🌌",
+      "a": "Interstellar",
+      "note": "Time dilation and the cornfields.",
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "e-n9",
+      "emoji": "🔥🏞️🕯️💔",
+      "a": "Masaan",
+      "note": "The ghats of Varanasi.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "e-n10",
+      "emoji": "⛏️🔫👨‍👦‍👦",
+      "a": "Gangs of Wasseypur",
+      "note": "Coal, guns, three generations.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "e-n11",
+      "emoji": "💊🍸💔🎸",
+      "a": "Dev.D",
+      "note": "Devdas, Anurag Kashyap style.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "e-n12",
+      "emoji": "🏚️🌧️💰👹",
+      "a": "Tumbbad",
+      "note": "The rain, the treasure, Hastar.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "e-n13",
+      "emoji": "🏔️💀👑🎭",
+      "a": "Haider",
+      "note": "Hamlet in Kashmir.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "e-n14",
+      "emoji": "🤫🎩🚲💞",
+      "a": "Barfi!",
+      "note": "The silent one with the hat and the bicycle.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "e-n15",
+      "emoji": "🎬👨‍👩‍👧‍👧🚔🏗️",
+      "a": "Drishyam",
+      "note": "The cinema alibi, the police, the building site.",
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "e-n16",
+      "emoji": "🏑🇮🇳👨‍🏫",
+      "a": "Chak De! India",
+      "levels": [],
+      "suggested": "hard"
+    }
+  ],
+  "who": [
+    {
+      "id": "w-e1",
+      "levels": ["easy"],
+      "a": "Mahatma Gandhi",
+      "hints": ["I was born in Porbandar, Gujarat, in 1869.", "I trained as a lawyer in London and then worked in South Africa for 21 years.", "I walked 240 miles to the sea to make salt.", "My birthday, 2 October, is a national holiday.", "I am called the Father of the Nation."]
+    },
+    {
+      "id": "w-e2",
+      "levels": ["easy"],
+      "a": "Amitabh Bachchan",
+      "hints": ["I was born in Allahabad in 1942; my father was a famous Hindi poet.", "All India Radio once rejected my voice.", "I played Vijay in Zanjeer and Deewaar and became the Angry Young Man.", "For over twenty years I have asked India, 'Lock kiya jaye?'", "My Mumbai home is called Jalsa, and fans gather outside every Sunday."]
+    },
+    {
+      "id": "w-e3",
+      "levels": ["easy"],
+      "a": "M. S. Dhoni",
+      "hints": ["I was born in Ranchi and once worked as a railway ticket collector.", "I was a goalkeeper at school before I switched sports.", "I lifted the T20 World Cup in 2007 and the ODI World Cup in 2011.", "My signature shot is called the helicopter.", "Captain Cool, number 7, Thala."]
+    },
+    {
+      "id": "w-e4",
+      "levels": ["easy"],
+      "a": "Shah Rukh Khan",
+      "hints": ["I was born in Delhi and studied at Hansraj College.", "My first big break was a TV series about army cadets.", "I co-own a cricket team in Kolkata.", "My house in Bandra is called Mannat.", "I spread my arms wide, and they call me King Khan."]
+    },
+    {
+      "id": "w-e5",
+      "levels": ["easy"],
+      "a": "Kalpana Chawla",
+      "hints": ["I was born in Karnal, Haryana, in 1962.", "I studied aeronautical engineering at Punjab Engineering College.", "In 1997 I became the first woman of Indian origin in space.", "My second mission was aboard the space shuttle Columbia.", "ISRO renamed its weather satellite after me."]
+    },
+    {
+      "id": "w-e6",
+      "levels": ["easy"],
+      "a": "Ratan Tata",
+      "hints": ["I trained as an architect at Cornell University.", "I started on the shop floor of a steel plant in Jamshedpur.", "I launched a car that was meant to cost one lakh rupees.", "Under me, my group bought Jaguar, Land Rover and Tetley.", "I chaired India's oldest business house, and I loved dogs."]
+    },
+    {
+      "id": "w-m1",
+      "levels": [],
+      "a": "Sachin Tendulkar",
+      "hints": ["A Bollywood music director is the reason I have my first name.", "In 1987 I was at a World Cup semi-final in Mumbai, but only to fetch the ball.", "A Pakistani fast bowler bloodied my nose in my first series. I said 'main khelega'.", "I have 100 of something nobody else has 100 of.", "Number 10. Bharat Ratna. 'Sachiiin, Sachin.'"]
+    },
+    {
+      "id": "w-m2",
+      "levels": [],
+      "a": "A. R. Rahman",
+      "hints": ["Until I was 23, my name was Dileep.", "My first pay cheques came from advertising jingles, not films.", "A film about a kidnapping in Kashmir made me famous, and it was shot in Tamil first.", "I wrote Jai Ho, and the Academy agreed twice in one evening.", "The Mozart of Madras."]
+    },
+    {
+      "id": "w-m3",
+      "levels": ["medium"],
+      "a": "Rajinikanth",
+      "hints": ["I once punched tickets, not people.", "My birth name is Shivaji Rao Gaikwad and I grew up speaking Marathi, not the language of my films.", "A 1995 film of mine called Muthu became a cult hit in Japan.", "My first-day-first-shows start at 4 am, with milk poured over cutouts.", "Thalaivar. Enthiran. Jailer. Style."]
+    },
+    {
+      "id": "w-m4",
+      "levels": ["medium"],
+      "a": "Irrfan Khan",
+      "hints": ["I was picked for a Jaipur cricket trophy team but could not afford the travel.", "Mira Nair cast me in Salaam Bombay as a teenager, then cut most of my scenes.", "I crossed the Pacific in a lifeboat with a tiger.", "I ate from a stranger's lunchbox, and I owned the park in Jurassic World.", "The Khan who never wanted to be a superstar. We lost him in 2020."]
+    },
+    {
+      "id": "w-m5",
+      "levels": ["medium"],
+      "a": "Sudha Murty",
+      "hints": ["A postcard I wrote to J. R. D. Tata got a men-only job advert changed, and got me the job.", "I lent my husband ten thousand rupees. He built something worth lakhs of crores.", "I write books for children and chair a foundation that shares its name with a software company.", "My son-in-law ran a country.", "Infosys, Narayana Murthy and Rishi Sunak: I am the link."]
+    },
+    {
+      "id": "w-m6",
+      "levels": ["medium"],
+      "a": "Neeraj Chopra",
+      "hints": ["I took up my sport at 13 because I was overweight.", "I hold the rank of Subedar in the Indian Army.", "In Tokyo I ended a hundred-year wait in athletics.", "My Paris silver came second to a Pakistani friend's gold.", "Javelin. 89.94 metres. Panipat."]
+    },
+    {
+      "id": "w-h1",
+      "levels": ["hard"],
+      "a": "Verghese Kurien",
+      "hints": ["I trained as a metallurgist in Michigan, then was posted to a dairy in Gujarat as a condition of my scholarship.", "I did not like milk.", "I set up the National Dairy Development Board in Anand.", "Operation Flood, which I led, made India the world's largest milk producer.", "They call me the Milkman of India."]
+    },
+    {
+      "id": "w-h2",
+      "levels": ["medium", "hard"],
+      "a": "Homi J. Bhabha",
+      "hints": ["I went to Cambridge to study mechanical engineering, then switched to physics.", "In 1945 I founded a research institute in Mumbai with Tata money.", "I was the first chairman of India's Atomic Energy Commission.", "I died in a plane crash on Mont Blanc in 1966.", "The atomic research centre at Trombay is named after me."]
+    },
+    {
+      "id": "w-h3",
+      "levels": ["hard"],
+      "a": "Dhyan Chand",
+      "hints": ["I joined the army at 16 and practised my sport by moonlight, which gave me my name.", "I won Olympic gold in 1928, 1932 and 1936.", "In Berlin in 1936, Hitler reportedly offered me a post in the German army.", "My birthday, 29 August, is National Sports Day.", "I am the Wizard of hockey."]
+    },
+    {
+      "id": "w-h4",
+      "levels": ["hard"],
+      "a": "Satyajit Ray",
+      "hints": ["I started out as a commercial artist designing book covers.", "I shot my first film on weekends with an amateur crew and borrowed money.", "I created the detective Feluda.", "I received an honorary Oscar in 1992, accepting it from a hospital bed.", "My first film was Pather Panchali."]
+    },
+    {
+      "id": "w-h5",
+      "levels": ["hard"],
+      "a": "Ela Bhatt",
+      "hints": ["I was born in Ahmedabad and studied law.", "In 1972 I founded a trade union for self-employed women.", "I started a cooperative bank whose depositors were vegetable vendors and rag pickers.", "I won the Ramon Magsaysay Award in 1977.", "My organisation is called SEWA."]
+    },
+    {
+      "id": "w-h6",
+      "levels": ["medium", "hard"],
+      "a": "Rakesh Sharma",
+      "hints": ["I was a fighter pilot in the Indian Air Force and flew in the 1971 war.", "In 1984 I spent nearly eight days aboard a Soviet space station.", "I did yoga experiments in orbit.", "Asked how India looked from space, I answered 'Saare Jahan Se Achha'.", "I am the first Indian in space."]
+    },
+    {
+      "id": "w-n1",
+      "a": "Kapil Dev",
+      "hints": ["As a teenager I told a camp cook that two rotis were not enough for a fast bowler.", "My 175 not out at Tunbridge Wells was never televised; the BBC was on strike that day.", "I captained a side nobody rated to a title at the home of cricket in 1983.", "My 434 Test wickets were a world record when I retired.", "The Haryana Hurricane."],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "w-n2",
+      "a": "Priyanka Chopra",
+      "hints": ["I won a world title in 2000 wearing a sash, aged 18.", "I have played a boxer from Manipur and a woman with seven husbands.", "I led an American network show as an FBI recruit.", "I married a Jonas.", "Desi girl."],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "w-n3",
+      "a": "Dhirubhai Ambani",
+      "hints": ["I started out pumping petrol in Aden.", "My shareholder meetings were held in a football stadium.", "My first big brand was a textile called Vimal.", "My two sons split what I built, not always politely.", "Reliance was my baby."],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "w-n4",
+      "a": "Lata Mangeshkar",
+      "hints": ["My father, a Marathi theatre singer, named me after a character in one of his plays.", "I sang my first film song at 13, to feed my brothers and sisters.", "One of my songs about soldiers reportedly brought Nehru to tears.", "I hold the Bharat Ratna and sat in the Rajya Sabha, rarely attending.", "The Nightingale of India."],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "w-n5",
+      "a": "Vikram Sarabhai",
+      "hints": ["My family ran textile mills in Ahmedabad, and my wife was a famous classical dancer.", "I founded a management institute in Ahmedabad that you need a very high score to enter.", "I persuaded Nehru that a poor country needed a space programme.", "A lunar lander was named after me in 2019.", "Father of the Indian space programme."],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "w-n6",
+      "a": "Sania Mirza",
+      "hints": ["My nose ring was famous before my forehand was.", "I reached world number one in doubles with a Swiss partner.", "I was the first Indian woman to win a WTA singles title, in my home city.", "I married a Pakistani cricketer.", "Hyderabad's tennis star."],
+      "levels": [],
+      "suggested": "medium"
+    },
+    {
+      "id": "w-n7",
+      "a": "Salim Ali",
+      "hints": ["A yellow-throated sparrow I shot as a boy set the course of my life.", "I surveyed the birds of Hyderabad, Travancore and Bharatpur on foot.", "Bharatpur's Keoladeo became a sanctuary largely because of my nagging.", "My field guide is simply called The Book of Indian Birds.", "The Birdman of India."],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "w-n8",
+      "a": "Amrita Pritam",
+      "hints": ["I wrote a poem begging Waris Shah to rise from his grave and look at Punjab.", "My novel Pinjar became a film in 2003.", "I was the first woman to win the Sahitya Akademi Award, in 1956.", "I lived with the artist Imroz for forty years without marrying him.", "Punjabi's most loved poet of the twentieth century."],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "w-n9",
+      "a": "B. R. Ambedkar",
+      "hints": ["I hold doctorates from Columbia and the London School of Economics.", "I publicly burned a Sanskrit law book in 1927.", "I chaired the committee that drafted a very long document in 1949.", "In 1956 I changed my religion in Nagpur, with hundreds of thousands following.", "Babasaheb."],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "w-n10",
+      "a": "C. V. Raman",
+      "hints": ["The blue of the Mediterranean on a voyage home set me thinking about light.", "I founded a research institute in Bengaluru that carries my name.", "My discovery is used today to spot fake gemstones and early disease.", "I was the first Asian to win a science Nobel, in 1930.", "The effect is named after me."],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "w-n11",
+      "a": "P. T. Usha",
+      "hints": ["I missed an Olympic bronze by one-hundredth of a second in 1984.", "I come from a village in Kerala with a very fast nickname.", "I won four golds at the 1986 Asian Games.", "I now sit in the Rajya Sabha and head the Indian Olympic Association.", "The Payyoli Express."],
+      "levels": [],
+      "suggested": "hard"
+    },
+    {
+      "id": "w-n12",
+      "a": "Jagadish Chandra Bose",
+      "hints": ["I showed that plants respond to stimuli, using an instrument I built called the crescograph.", "I demonstrated radio waves in Calcutta before Marconi's patent.", "I refused to patent my inventions on principle.", "An institute in Kolkata and a crater on the Moon carry my name.", "The Bose who is neither Subhas nor Satyendra."],
+      "levels": [],
+      "suggested": "hard"
+    }
+  ]
+};
+
+</script>
+<script>
+/* =====================================================================
+   QUESTIONS live in questions.js (the bank). This block only defines the
+   show name and the five rounds' names, rules and point values.
+   ===================================================================== */
+const SHOW = { title: "Nation Wants to Guess", subtitle: "SNN Edition" };
+const ROUNDS = [
+  { id: "r1", type: "percent", tag: "Round 1", name: "Nation Wants to Guess",
+    rule: "A number question. Every team guesses a percentage. Closest guess wins, runner-up gets half.", pts: { win: 100, second: 50 } },
+  { id: "r2", type: "board", tag: "Round 2", name: "Pick Me Behaviour",
+    rule: "Teams take turns picking a tile. The category names are lying to you. Right answer, full points. Wrong answer, it passes to the other team for half. No minus points. One tile is All In." },
+  { id: "r3", type: "rank", tag: "Round 3", name: "Rank Karo",
+    rule: "Five things, one order. Teams write their order down. We reveal the real order one slot at a time.", pts: { slot: 50, perfect: 100 } },
+  { id: "r4", type: "emoji", tag: "Round 4", name: "Emoji Kahani",
+    rule: "A film, told in emoji. Buzz first to answer. Right answer +100. Wrong answer −100, and you're locked out for that picture.", pts: { win: 100 } },
+  { id: "r5", type: "whoami", tag: "Final Round", name: "Who Am I?",
+    rule: "One person per team, five hints, three guesses. Name them on hint 1 for 500 points, then 400, 300, 200 and 100 on hint 5. A wrong guess costs nothing but a guess. No passing.",
+    pts: { hints: [500, 400, 300, 200, 100], guesses: 3 } }
+];
+
+
+
+const LEVELS={easy:{label:"Easy",blurb:"Everyone can play. School facts, big films, famous faces."},medium:{label:"Medium",blurb:"Earn your points. Lateral questions, cryptic hints, film-lover bait."},hard:{label:"Difficult",blurb:"For the show-offs. History, numbers, deep cuts."}};
+const LCODE={easy:"e",medium:"m",hard:"h"};
+const BANK=(typeof QUESTION_BANK==="object"&&QUESTION_BANK)||{percent:[],board:[],rank:[],emoji:[],who:[]};
+function itemLevels(it){ const o=G&&G.sel&&G.sel[it.id]; if(o!=null) return Object.keys(LCODE).filter(k=>o.includes(LCODE[k])); return it.levels||[]; }
+function inLevel(it,k){ return itemLevels(it).includes(k); }
+function bankPick(type,k){ return (BANK[type]||[]).filter(it=>inLevel(it,k)); }
+function buildPack(key){
+  const k=LEVELS[key]?key:"medium"; const L=LEVELS[k];
+  const picked=bankPick("board",k).slice(0,5);
+  const cats=picked.map(c=>({title:c.title,meaning:c.meaning,tiles:c.tiles}));
+  let allIn=null; picked.forEach((c,i)=>{ if(allIn==null&&c.allIn!=null) allIn=[i,c.allIn]; });
+  return { title: SHOW.title, subtitle: SHOW.subtitle, level: L.label, key: k, rounds: [
+    { ...ROUNDS[0], items: bankPick("percent",k) },
+    { ...ROUNDS[1], categories: cats, allIn },
+    { ...ROUNDS[2], items: bankPick("rank",k) },
+    { ...ROUNDS[3], items: bankPick("emoji",k) },
+    { ...ROUNDS[4], items: bankPick("who",k) }
+  ]};
+}
+
+/* ===================== slides ===================== */
+function buildSlides(){
+  const S=[{k:"title",label:"Title"},{k:"rules",label:"Ground rules"}];
+  const live=PACK.rounds.map((r,ri)=>(r.type==="board"?!!r.categories.length:!!r.items.length)?ri:-1).filter(x=>x>=0); const lastRi=live[live.length-1];
+  PACK.rounds.forEach((r,ri)=>{
+    if(r.type==="board"?!r.categories.length:!r.items.length) return;
+    S.push({k:"intro",r:ri,label:r.tag+" · "+r.name});
+    if(r.type==="board"){ S.push({k:"board",r:ri,label:r.name+" board"}); }
+    else r.items.forEach((it,i)=>S.push({k:"q",r:ri,i,label:r.name+" "+(i+1)}));
+    if(ri!==lastRi) S.push({k:"scores",r:ri,label:"Scores after "+r.tag});
+  });
+  S.push({k:"final",label:"Winner"});
+  return S;
+}
+let packKey="", packSig=null, PACK=null, SLIDES=[];
+function ensurePack(){ const k=G.pack||"medium"; const sig=k+"|"+JSON.stringify(G.sel||{}); if(sig!==packSig){ packSig=sig; packKey=k; PACK=buildPack(k); SLIDES=buildSlides(); } }
+const TEAM_COLORS=["#FF3D81","#2EE6D6","#FFD23F","#9B7BFF"];
+
+function defaultState(){
+  return { v:0, phase:"setup", s:0, teams:[{name:"Team Pink",color:0,score:0,lock:false},{name:"Team Teal",color:1,score:0,lock:false}], rev:{}, timer:{end:null,dur:30}, overlay:null, turn:0, log:[], pack:"medium", sel:{}, buzz:{armed:false,first:null,order:[],locked:[],passed:[],passOpen:false,gen:0}, buzzOn:true, players:{} };
+}
+let G=defaultState();
+let mode="lobby", db=null, room=null, stateDoc=null, hotBoot=false;
+let tvStarted=false, toastT=null, uiSheet=null, peersTV=0, dbState="local";
+let srvMode=false, srvReady=false;
+let peerId=""; try{ peerId=sessionStorage.getItem("nwtg-peer")||""; }catch(e){} if(!peerId){ peerId=Math.random().toString(36).slice(2,10); try{ sessionStorage.setItem("nwtg-peer",peerId); }catch(e){} }
+const bc=("BroadcastChannel" in window)?new BroadcastChannel("nwtg-sync"):null;
+const $app=document.getElementById("app");
+
+/* ===================== persistence & sync ===================== */
+function loadLocal(){ try{ const j=localStorage.getItem("nwtg-state"); if(j){ const o=JSON.parse(j); if(o&&o.teams) G=o; } }catch(e){} }
+function saveLocal(){ try{ localStorage.setItem("nwtg-state",JSON.stringify(G)); }catch(e){} }
+
+let writeChain=Promise.resolve(), writeDirty=false, writing=false;
+function flushDb(){
+  if(!stateDoc||writing||!writeDirty) return;
+  writeDirty=false; writing=true;
+  const snapshot=JSON.parse(JSON.stringify(G));
+  stateDoc.set(snapshot).then(()=>{dbState="synced";}).catch(e=>{dbState="error";console.warn("db write",e);}).finally(()=>{writing=false; updateStatus(); if(writeDirty) flushDb();});
+}
+function pushState(){
+  G.v=(G.v||0)+1; G.t=Date.now();
+  saveLocal();
+  if(bc) bc.postMessage({state:G});
+  if(room){ const j=JSON.stringify(G); if(j.length<3800) room.emit("state",G).catch(()=>{}); }
+  if(stateDoc){ writeDirty=true; flushDb(); }
+  if(srvMode) srvPost();
+  relayPublish();
+  render();
+}
+function adopt(o,force){ if(!o||!o.teams) return; if(!force&&(o.v||0)<=(G.v||0)) return; G=o; saveLocal(); render(); }
+
+/* ---- local server sync (server.py): plain HTTP long-polling, no accounts ---- */
+let srvPosting=false, srvPostDirty=false, srvMs=0;
+async function srvPost(){
+  if(srvPosting){ srvPostDirty=true; return; }
+  srvPosting=true;
+  try{ await fetch("/state",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(G),cache:"no-store"}); dbState="synced"; }
+  catch(e){ dbState="error"; }
+  srvPosting=false; updateStatus();
+  if(srvPostDirty){ srvPostDirty=false; srvPost(); }
+}
+async function srvConnect(){
+  if(window.claude&&window.claude.use) return;
+  if(!/^https?:/.test(location.protocol)){ relayAuto(); return; }
+  let j=null;
+  try{ const c=new AbortController(); const t=setTimeout(()=>c.abort(),2500); const r=await fetch("/state?since=-1&role="+mode+"&peer="+peerId,{cache:"no-store",signal:c.signal}); clearTimeout(t); if(!r.ok){ relayAuto(); return; } j=await r.json(); if(!j||typeof j.v!=="number"){ relayAuto(); return; } }
+  catch(e){ relayAuto(); return; }
+  srvMode=true; dbState="synced"; if(typeof j.mseq==="number") srvMs=j.mseq;
+  if(j.state&&j.state.teams){ if(mode!=="host"||(j.state.v||0)>(G.v||0)) adopt(j.state,true); }
+  if(mode==="host"&&!(j.state&&(j.state.v||0)>=(G.v||0))){ G.v=Math.max(G.v||0,j.v||0)+1; saveLocal(); srvPost(); }
+  peersTV=j.tv||0; srvReady=true; if(mode==="lobby"||mode==="buzz") render(); updateStatus(); srvPoll();
+}
+async function srvPoll(){
+  while(srvMode){
+    try{
+      const r=await fetch("/state?since="+(G.v||0)+"&role="+mode+"&peer="+peerId+(mode==="host"?"&ms="+srvMs:""),{cache:"no-store"});
+      if(!r.ok) throw new Error(r.status);
+      const j=await r.json(); peersTV=j.tv||0;
+      if(j.state&&j.state.teams&&(j.state.v||0)!==(G.v||0)){ if(mode!=="host"||(j.state.v||0)>(G.v||0)) adopt(j.state,true); }
+      if(mode==="host"&&j.msgs){ for(const m of j.msgs){ if(m.seq>srvMs){ srvMs=m.seq; handleMsg(m); } } } else if(typeof j.mseq==="number") srvMs=j.mseq;
+      if(dbState!=="synced") dbState="synced";
+      updateStatus();
+    }catch(e){ dbState="error"; updateStatus(); await new Promise(res=>setTimeout(res,1500)); }
+  }
+}
+/* ---- internet relay (public MQTT broker over WebSocket): outbound only, no accounts ---- */
+const RELAY_BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081"];
+let relay=null, relayCode="", relayState="off", relayTvSeen=0, relayHb=null, relayMsg="", relayGotState=false;
+function relayAvailable(){ return !(window.claude&&window.claude.use)&&!srvMode; }
+function makeCode(){ const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789"; let c=""; for(let i=0;i<5;i++) c+=A[Math.floor(Math.random()*A.length)]; return c; }
+function savedCode(){ try{ return localStorage.getItem("nwtg-room")||""; }catch(e){ return ""; } }
+function loadMqtt(){ return new Promise((res,rej)=>{ if(window.mqtt) return res(); const el=document.createElement("script"); el.src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"; el.onload=res; el.onerror=()=>rej(new Error("mqtt lib")); document.head.appendChild(el); }); }
+function relayTopic(k){ return "nwtg/v1/"+relayCode+"/"+k; }
+function relaySetStatus(st,msg){ relayState=st; relayMsg=msg||""; if(mode==="lobby"||mode==="tv"||mode==="buzz") render(); else updateStatus(); }
+async function relayConnect(code){
+  code=(code||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6);
+  if(code.length<4){ relaySetStatus("off","Room code needs 4 to 6 letters or digits."); return; }
+  if(relay){ try{ relay.end(true); }catch(e){} relay=null; clearInterval(relayHb); }
+  relayCode=code; try{ localStorage.setItem("nwtg-room",code); }catch(e){}
+  relaySetStatus("connecting","Loading…");
+  try{ await loadMqtt(); }catch(e){ relaySetStatus("error","Could not load the relay library. Is this device online?"); return; }
+  relaySetStatus("connecting","Finding the fastest relay…");
+  const c=await relayRace(RELAY_BROKERS);
+  if(!c){ relaySetStatus("error","No relay reachable. Check the internet connection on this device."); return; }
+  relay=c; relayGotState=false; relayAttach(c);
+}
+/* Open every broker at once and keep whichever answers first: the nearest one is usually the snappiest. */
+function relayRace(urls){ return new Promise(res=>{ let done=false; const all=[];
+  const finish=c=>{ if(done) return; done=true; all.forEach(x=>{ if(x!==c){ try{ x.end(true); }catch(e){} } }); res(c); };
+  urls.forEach(url=>{ try{ const c=mqtt.connect(url,{clean:true,connectTimeout:8000,reconnectPeriod:2000,keepalive:20}); all.push(c);
+    c.on("connect",()=>{ if(done){ if(relay!==c){ try{ c.end(true); }catch(e){} } return; } finish(c); });
+    c.on("error",()=>{ if(!done){ try{ c.end(true); }catch(e){} } }); }catch(e){} });
+  setTimeout(()=>{ if(!done){ done=true; all.forEach(x=>{ try{ x.end(true); }catch(e){} }); res(null); } },9000); }); }
+function relayAttach(c){
+  c.subscribe([relayTopic("state"),relayTopic("tv"),relayTopic("msg")]);
+  relaySetStatus("on","Connected. Room "+relayCode+".");
+  if(mode==="host") setTimeout(()=>{ if(relay===c&&!relayGotState){ G.v=(G.v||0)+1; saveLocal(); relayPublish(); } },1800);
+  clearInterval(relayHb); relayHb=setInterval(()=>{ if(relay===c&&mode==="tv") c.publish(relayTopic("tv"),peerId); },10000);
+  if(mode==="tv") c.publish(relayTopic("tv"),peerId);
+  c.on("connect",()=>{ if(relay===c) relaySetStatus("on","Connected. Room "+relayCode+"."); });
+  c.on("message",(t,m)=>{
+    if(relay!==c) return;
+    if(t===relayTopic("tv")){ if(m.toString()!==peerId){ relayTvSeen=Date.now(); updateStatus(); } return; }
+    if(t===relayTopic("msg")){ try{ const o=JSON.parse(m.toString()); if(mode==="host") handleMsg(o); else onPeerMsg(o); }catch(e){} return; }
+    if(t===relayTopic("state")){ try{ const o=JSON.parse(m.toString()); if(!o||!o.teams) return; relayGotState=true; if(mode!=="host"){ if((o.v||0)!==(G.v||0)) adopt(o,true); } else if((o.v||0)>(G.v||0)) adopt(o,true); else if((o.v||0)<(G.v||0)) relayPublish(); }catch(e){} }
+  });
+  c.on("offline",()=>{ if(relay===c) relaySetStatus("connecting","Reconnecting…"); });
+}
+function relayPublish(){ if(relay&&relayState==="on"&&mode==="host"){ try{ relay.publish(relayTopic("state"),JSON.stringify(G),{retain:true,qos:0}); }catch(e){} } }
+function relayAuto(){ if(!relayAvailable()) return; const saved=savedCode(); if(mode==="tv"){ relayConnect(saved||makeCode()); } else if(saved&&(mode==="host"||mode==="buzz")){ relayConnect(saved); } }
+
+async function connectCaps(){
+  if(!window.claude||!window.claude.use) return;
+  try{
+    const [d,r]=await Promise.all([claude.use("db"),claude.use("room")]);
+    db=d; room=r;
+  }catch(e){ console.warn(e); }
+  if(db){
+    stateDoc=db.doc("live/state");
+    dbState="connecting";
+    stateDoc.onSnapshot(snap=>{
+      if(snap.exists){ const o=snap.data(); if(mode==="tv"||(o.v||0)>(G.v||0)) { if((o.v||0)>(G.v||0)||mode==="tv") adopt(o); } }
+      if(!snap.metadata.fromCache){ dbState="synced"; if(mode==="host"&&snap.exists===false){ writeDirty=true; flushDb(); } }
+      updateStatus();
+    },e=>{ dbState="error"; console.warn("db",e); updateStatus(); });
+  }
+  if(room){
+    room.on("state",m=>{ if(!m.sameTab) adopt(m.data); });
+    room.presence({role:mode}).catch(()=>{});
+    room.onPeers(ch=>{ peersTV=ch.peers.filter(p=>!p.sameTab&&p.presence&&p.presence.role==="tv").length; updateStatus(); });
+    room.onConnection(()=>updateStatus());
+  }
+  updateStatus();
+}
+if(bc) bc.onmessage=ev=>{ if(ev.data&&ev.data.state) adopt(ev.data.state,mode!=="host"); if(ev.data&&ev.data.msg){ if(mode==="host") handleMsg(ev.data.msg); else onPeerMsg(ev.data.msg); } };
+
+/* ===================== helpers ===================== */
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+/* Flags as inline SVG: Windows has no flag glyphs, so flag emoji would show as two letters on the TV laptop. */
+const FLAGS={
+  IN:'<rect width="3" height="2" fill="#ff9933"/><rect y=".667" width="3" height=".667" fill="#fff"/><rect y="1.333" width="3" height=".667" fill="#128807"/><circle cx="1.5" cy="1" r=".23" fill="none" stroke="#000080" stroke-width=".07"/>',
+  US:'<rect width="3" height="2" fill="#fff"/>'+[0,2,4,6,8,10,12].map(i=>`<rect y="${(i*2/13).toFixed(3)}" width="3" height="${(2/13).toFixed(3)}" fill="#b22234"/>`).join("")+'<rect width="1.2" height="1.077" fill="#3c3b6e"/>',
+  PK:'<rect width="3" height="2" fill="#01411c"/><rect width=".75" height="2" fill="#fff"/><circle cx="1.95" cy="1" r=".52" fill="#fff"/><circle cx="2.12" cy=".88" r=".44" fill="#01411c"/><circle cx="2.4" cy=".58" r=".11" fill="#fff"/>',
+  ES:'<rect width="3" height="2" fill="#aa151b"/><rect y=".5" width="3" height="1" fill="#f1bf00"/>',
+  GB:'<rect width="3" height="2" fill="#012169"/><path d="M0 0L3 2M3 0L0 2" stroke="#fff" stroke-width=".42"/><path d="M0 0L3 2M3 0L0 2" stroke="#c8102e" stroke-width=".14"/><path d="M1.5 0V2M0 1H3" stroke="#fff" stroke-width=".55"/><path d="M1.5 0V2M0 1H3" stroke="#c8102e" stroke-width=".32"/>',
+  FR:'<rect width="3" height="2" fill="#ed2939"/><rect width="2" height="2" fill="#fff"/><rect width="1" height="2" fill="#002395"/>',
+  CH:'<rect width="3" height="2" fill="#d52b1e"/><rect x="1.3" y=".45" width=".4" height="1.1" fill="#fff"/><rect x=".95" y=".8" width="1.1" height=".4" fill="#fff"/>'
+};
+function graphemes(str){ try{ if(typeof Intl!=="undefined"&&Intl.Segmenter) return [...new Intl.Segmenter().segment(str)].map(x=>x.segment); }catch(e){} return Array.from(str); }
+function emojiHTML(str){ return esc(str).replace(/\uD83C[\uDDE6-\uDDFF]\uD83C[\uDDE6-\uDDFF]/g,m=>{ const cc=String.fromCodePoint(m.codePointAt(0)-0x1F1E6+65,m.codePointAt(2)-0x1F1E6+65); const f=FLAGS[cc]; return f?`<svg class="flag" viewBox="0 0 3 2" role="img" aria-label="${cc} flag">${f}</svg>`:m; }); }
+const cur=()=>{ ensurePack(); return SLIDES[Math.min(G.s,SLIDES.length-1)]; };
+const roundOf=sl=>sl.r!=null?PACK.rounds[sl.r]:null;
+const tc=i=>TEAM_COLORS[G.teams[i].color%TEAM_COLORS.length];
+function rev(){ const k="s"+G.s; if(!G.rev[k]) G.rev[k]={}; return G.rev[k]; }
+function whoTeam(){ const rv=G.rev["s"+G.s]||{}; return rv.team!=null?rv.team:(cur().i%G.teams.length); }
+function activeTeam(){ const sl=cur(), r=roundOf(sl); if(!r) return null; if(sl.k==="board"){ const rv=G.rev["s"+G.s]||{}; if(rv.open&&rv.allin) return rv.allin.team; if(rv.open) return rv.passTo!=null?rv.passTo:rv.turn; return (G.turn||0)%G.teams.length; } if(sl.k==="q"&&r.type==="whoami") return whoTeam(); return null; }
+function seededShuffle(arr,seed){ let a=arr.slice(), x=seed*9301+49297; for(let i=a.length-1;i>0;i--){ x=(x*9301+49297)%233280; const j=Math.floor(x/233280*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function award(ti,pts,reason){ if(!pts) return; G.n=(G.n||0)+1; G.teams[ti].score+=pts; G.log.push({t:ti,p:pts,r:reason||"",s:G.s}); if(G.log.length>40) G.log.shift(); toast((pts>0?"+":"")+pts+" "+G.teams[ti].name); }
+function undo(){ const e=G.log.pop(); if(!e){toast("Nothing to undo");return;} G.teams[e.t].score-=e.p; toast("Undid "+(e.p>0?"+":"")+e.p+" "+G.teams[e.t].name); pushState(); }
+function toast(msg){ if(mode!=="host"&&mode!=="buzz") return; clearTimeout(toastT); let t=document.querySelector(".toast"); if(!t){ t=document.createElement("div"); t.className="toast"; document.body.appendChild(t);} t.textContent=msg; t.hidden=false; toastT=setTimeout(()=>{t.hidden=true;},1600); }
+function leaderboard(){ return G.teams.map((t,i)=>({...t,i})).sort((a,b)=>b.score-a.score); }
+const T_DRUM=5000;
+function go(n){ G.s=Math.max(0,Math.min(SLIDES.length-1,n)); G.timer.end=null; G.overlay=null; G.teams.forEach(t=>t.lock=false); armSlide(); if(cur().k==="final"){ G.phase="end"; rev().at=Date.now(); } pushState(); }
+function drumOn(){ const sl=cur(); if(sl.k!=="final") return false; const rv=G.rev["s"+G.s]||{}; return !!(rv.at&&Date.now()<rv.at+T_DRUM); }
+let drumKey="";
+const T_PCT=45, T_RANK=60, T_TILE=45, T_REVEAL=2000;
+function armSlide(){ const sl=cur(), r=roundOf(sl); armBuzz(); if(sl.k==="q"&&r&&(r.type==="percent"||r.type==="rank")){ const rv=rev(); if(!rv.phase){ const d=r.type==="percent"?T_PCT:T_RANK; rv.phase="open"; rv.sub={}; rv.deadline=Date.now()+d*1000; G.timer.dur=d; G.timer.end=rv.deadline; } else if(rv.phase==="open"&&rv.deadline){ G.timer.dur=r.type==="percent"?T_PCT:T_RANK; G.timer.end=rv.deadline; } } }
+/* ---- buzzers: players' phones race to answer; the host decides first by arrival order ---- */
+function buzzSlide(){ const sl=cur(), r=roundOf(sl); return !!(sl.k==="q"&&r&&r.type==="emoji"); }
+function armBuzz(){ const g=(G.buzz&&G.buzz.gen)||0; G.buzz={armed:!!(G.buzzOn!==false&&buzzSlide()),first:null,order:[],locked:[],passed:[],passOpen:false,gen:g+1}; }
+function handleBuzz(b){ if(mode!=="host"||!b||typeof b.team!=="number") return; const bz=G.buzz||{}; if(!bz.armed) return; if(b.gen!=null&&b.gen!==bz.gen) return; if(!G.teams[b.team]) return; if((bz.locked||[]).includes(b.team)||G.teams[b.team].lock) return; bz.order=bz.order||[]; if(bz.order.some(x=>x.team===b.team)) return; const e={team:b.team,peer:String(b.peer||""),name:String(b.name||"").slice(0,24),t:Date.now()}; bz.order.push(e); if(!bz.first) bz.first=e; G.buzz=bz; pushState(); }
+function buzzWrong(){ const r=roundOf(cur()), bz=G.buzz; if(!bz||!bz.first) return; const loser=bz.first.team, pen=(r&&r.pts&&r.pts.win)||100; award(loser,-pen,"wrong buzz"); bz.locked=(bz.locked||[]).concat([loser]); G.teams[loser].lock=true; bz.order=(bz.order||[]).filter(x=>x.team!==loser);
+  bz.lastWrong={team:loser,pen};
+  const next=bz.order.find(x=>!bz.locked.includes(x.team));
+  if(next){ bz.first=Object.assign({},next,{handed:true}); toast("Over to "+G.teams[next.team].name); }
+  else { bz.first=null; bz.passOpen=true; bz.gen=(bz.gen||0)+1; const open=G.teams.filter((t,i)=>!bz.locked.includes(i)).length; if(!open){ bz.armed=false; bz.result={team:loser,ok:false,pen}; rev().revealed=true; toast("Nobody left to answer"); } else toast("Re-armed: the others can buzz or pass"); }
+  pushState(); }
+function handlePass(m){ const bz=G.buzz; if(!bz||!bz.armed||bz.first||typeof m.team!=="number") return; if(!G.teams[m.team]||(bz.locked||[]).includes(m.team)) return; bz.passed=bz.passed||[]; if(!bz.passed.includes(m.team)) bz.passed.push(m.team); const open=G.teams.map((t,i)=>i).filter(i=>!bz.locked.includes(i)); if(open.every(i=>bz.passed.includes(i))){ bz.armed=false; rev().revealed=true; toast("Everyone passed"); } pushState(); }
+function buzzReset(){ armBuzz(); G.teams.forEach(t=>t.lock=false); pushState(); }
+/* ---- player devices: one per team ---- */
+let myTeam=null, myName="", myGen=0; try{ const j=JSON.parse(localStorage.getItem("nwtg-player")||"null"); if(j){ myTeam=j.team; myName=""; myGen=j.gen||0; } }catch(e){}
+function savePlayer(){ try{ localStorage.setItem("nwtg-player",JSON.stringify({team:myTeam,gen:myGen})); }catch(e){} }
+function joinedTeam(){ const p=G.players||{}; for(const k in p){ if(p[k]&&p[k].peer===peerId) return Number(k); } return null; }
+function handleJoin(m){ if(typeof m.team!=="number"||!G.teams[m.team]) return; const p=G.players||{}; const curr=p[m.team]; if(curr&&curr.peer!==m.peer) return; for(const k in p){ if(p[k]&&p[k].peer===m.peer&&Number(k)!==m.team) delete p[k]; } p[m.team]={peer:String(m.peer||""),name:String(m.name||"").slice(0,24),seen:Date.now()}; G.players=p; pushState(); }
+function handleLeave(m){ const p=G.players||{}; let ch=false; for(const k in p){ if(p[k]&&p[k].peer===m.peer){ delete p[k]; ch=true; } } if(ch){ G.players=p; pushState(); } }
+function releaseTeam(i){ const p=G.players||{}; delete p[i]; G.players=p; pushState(); }
+function handleMsg(m){ if(mode!=="host"||!m) return; if(m.type==="buzz") handleBuzz(m); else if(m.type==="join") handleJoin(m); else if(m.type==="leave") handleLeave(m); else if(m.type==="answer") handleAnswer(m); else if(m.type==="pass") handlePass(m); }
+let provBuzz=null;
+function onPeerMsg(m){ if(!m||m.type!=="buzz") return; const bz=G.buzz||{}; if(!bz.armed||bz.first) return; if(m.gen!=null&&m.gen!==bz.gen) return; if((bz.locked||[]).includes(m.team)) return; if(provBuzz&&provBuzz.gen===bz.gen) return; provBuzz={team:m.team,peer:m.peer,name:m.name,gen:bz.gen}; render(); if(mode==="tv") sting("buzz"); }
+function currentProv(){ const bz=G.buzz||{}; if(!provBuzz) return null; if(!bz.armed||bz.first||provBuzz.gen!==bz.gen||(bz.locked||[]).includes(provBuzz.team)){ provBuzz=null; return null; } return provBuzz; }
+async function sendMsg(type,data){ const msg=Object.assign({type,team:myTeam,peer:peerId,name:myName,t:Date.now()},data||{});
+  if(srvMode){ try{ await fetch("/msg",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(msg),cache:"no-store"}); }catch(e){ toast("Could not reach the server"); } }
+  else if(relay&&relayState==="on"){ try{ relay.publish(relayTopic("msg"),JSON.stringify(msg)); }catch(e){} }
+  if(bc) bc.postMessage({msg}); }
+let buzzSentGen=-1, passSentGen=-1, joinSentAt=0;
+function sendBuzz(){ if(myTeam==null) return; const bz=G.buzz||{}; if(!bz.armed||(bz.locked||[]).includes(myTeam)||(bz.order||[]).some(x=>x.team===myTeam)) return; buzzSentGen=bz.gen||0; try{ navigator.vibrate&&navigator.vibrate(60); }catch(e){} beep(740,.12,"square"); sendMsg("buzz",{gen:bz.gen}); render(); }
+function sendPass(){ const bz=G.buzz||{}; passSentGen=bz.gen||0; sendMsg("pass",{gen:bz.gen}); render(); }
+/* ---- typed answers (rounds 1 and 3) ---- */
+let pctDraft="", pctDraftSlide=-1, rankDraft=null, rankDraftSlide=-1, sentFor=-1, rkDrag=null;
+function handleAnswer(m){ if(mode!=="host") return; const rv=G.rev["s"+G.s]; if(!rv||rv.phase!=="open"||m.s!==G.s) return; if(typeof m.team!=="number"||!G.teams[m.team]) return; rv.sub=rv.sub||{}; if(rv.sub[m.team]) return; const v=(m.value==null||m.value==="")?null:Number(m.value); rv.sub[m.team]={v:(v==null||isNaN(v))?null:v,order:Array.isArray(m.order)?m.order.map(String):null,t:Date.now()}; if(G.teams.every((t,i)=>rv.sub[i])) closeSubmissions(); else pushState(); }
+function closeSubmissions(){ const rv=rev(); if(rv.phase!=="open") return; rv.phase="closed"; rv.revealAt=Date.now()+T_REVEAL; G.timer.end=null; pushState(); }
+function restartSubmissions(){ const r=roundOf(cur()), rv=rev(); const d=r.type==="percent"?T_PCT:T_RANK; rv.phase="open"; rv.sub={}; rv.deadline=Date.now()+d*1000; rv.revealed=false; rv.shown=0; rv.won={}; rv.correct={}; rv.guess=[]; G.timer.dur=d; G.timer.end=rv.deadline; pushState(); }
+function revealPercentAuto(){ const r=roundOf(cur()), it=r.items[cur().i], rv=rev(); if(rv.revealed) return; rv.sub=rv.sub||{}; rv.guess=rv.guess||[]; G.teams.forEach((t,i)=>{ if(rv.sub[i]&&rv.sub[i].v!=null) rv.guess[i]=rv.sub[i].v; }); rv.revealed=true; rv.phase="done"; rv.won={}; G.timer.end=null;
+  const g=G.teams.map((t,i)=>({i,g:rv.guess[i]!=null?Number(rv.guess[i]):null})).filter(x=>x.g!=null&&!isNaN(x.g));
+  if(g.length){ g.sort((a,b)=>Math.abs(a.g-it.a)-Math.abs(b.g-it.a)); const best=Math.abs(g[0].g-it.a); const winners=g.filter(x=>Math.abs(x.g-it.a)===best); winners.forEach(w=>{ award(w.i,r.pts.win,"closest"); rv.won[w.i]=r.pts.win; }); const rest=g.filter(x=>Math.abs(x.g-it.a)!==best); if(rest.length){ const b2=Math.abs(rest[0].g-it.a); rest.filter(x=>Math.abs(x.g-it.a)===b2).forEach(w=>{ award(w.i,r.pts.second,"runner-up"); rv.won[w.i]=r.pts.second; }); } }
+  pushState(); }
+function revealRankAuto(){ const r=roundOf(cur()), it=r.items[cur().i], rv=rev(); if(rv.revealed) return; rv.sub=rv.sub||{}; rv.shown=it.items.length; rv.revealed=true; rv.phase="done"; rv.won={}; rv.correct={}; G.timer.end=null;
+  G.teams.forEach((t,i)=>{ const o=(rv.sub[i]&&rv.sub[i].order)||[]; let n=0; it.items.forEach((x,k)=>{ if(o[k]===x) n++; }); const pts=n*r.pts.slot+(n===it.items.length?r.pts.perfect:0); rv.correct[i]=n; rv.won[i]=pts; if(pts) award(i,pts,"slots"); });
+  pushState(); }
+let autoBusy=false;
+function hostAuto(){ if(mode!=="host"||G.phase!=="play"||autoBusy) return; autoBusy=true; try{ const sl=cur(), r=roundOf(sl); if(!r) return; const rv=G.rev["s"+G.s]; if(!rv) return; const now=Date.now();
+  if(sl.k==="q"&&(r.type==="percent"||r.type==="rank")){
+    if(rv.phase==="open"&&rv.deadline&&now>rv.deadline+1500) closeSubmissions();
+    else if(rv.phase==="closed"&&rv.revealAt&&now>=rv.revealAt){ if(r.type==="percent") revealPercentAuto(); else revealRankAuto(); }
+  }
+  if(sl.k==="board"&&rv.open&&!rv.revealed&&rv.deadline&&now>rv.deadline+300){ if(rv.allin&&rv.passTo==null){ if(rv.allin.stage==="play") allInWrong(); } else tilePass(); }
+  } finally { autoBusy=false; } }
+function playerAuto(){ if(mode!=="buzz"||myTeam==null) return;
+  if(joinedTeam()!==myTeam){ const p=(G.players||{})[myTeam]; if(!(p&&p.peer!==peerId)&&Date.now()-joinSentAt>3000&&(srvMode||(relay&&relayState==="on"))){ joinSentAt=Date.now(); sendMsg("join",{}); } return; }
+  const sl=cur(), r=roundOf(sl); const rv=G.rev["s"+G.s]; if(sl.k==="q"&&r&&(r.type==="percent"||r.type==="rank")&&rv&&rv.phase==="open"&&rv.deadline&&Date.now()>rv.deadline-400&&sentFor!==G.s&&!(rv.sub&&rv.sub[myTeam])) submitAnswer(true); }
+function submitAnswer(auto){ const sl=cur(), r=roundOf(sl); if(!r||sentFor===G.s) return; sentFor=G.s;
+  if(r.type==="percent"){ const el=document.getElementById("pct"); if(el) pctDraft=el.value; const n=pctDraft===""?null:Math.max(0,Math.min(100,Number(pctDraft))); sendMsg("answer",{s:G.s,value:(n==null||isNaN(n))?null:n}); }
+  else if(r.type==="rank"){ rkCommit(); sendMsg("answer",{s:G.s,order:rankDraft||[]}); }
+  try{ navigator.vibrate&&navigator.vibrate(30); }catch(e){} render(); }
+function rkDown(e){ if(e.target.closest("button")) return; const row=e.currentTarget; try{ row.setPointerCapture(e.pointerId); }catch(x){} row.classList.add("drag"); rkDrag=row; e.preventDefault(); }
+function rkMove(e){ if(!rkDrag||e.currentTarget!==rkDrag) return; const list=rkDrag.parentElement; const rows=[...list.children]; const y=e.clientY; for(const r of rows){ if(r===rkDrag) continue; const b=r.getBoundingClientRect(); if(y>b.top&&y<b.bottom){ const ti=rows.indexOf(r), di=rows.indexOf(rkDrag); if(ti<di) list.insertBefore(rkDrag,r); else list.insertBefore(rkDrag,r.nextSibling); rkRenumber(); break; } } }
+function rkUp(e){ if(!rkDrag) return; rkDrag.classList.remove("drag"); rkDrag=null; rkCommit(); }
+function rkRenumber(){ [...document.querySelectorAll("#rk .rk-row")].forEach((r,i)=>{ const n=r.querySelector(".i"); if(n) n.textContent=i+1; }); }
+function rkCommit(){ const rows=[...document.querySelectorAll("#rk .rk-row")]; if(rows.length) rankDraft=rows.map(r=>r.dataset.item); }
+function rkMoveBy(i,d){ const j=i+d; if(!rankDraft||j<0||j>=rankDraft.length) return; [rankDraft[i],rankDraft[j]]=[rankDraft[j],rankDraft[i]]; render(); }
+/* ---- the player's screen ---- */
+function pickTeam(i){ myTeam=i; myGen=G.rgen||0; savePlayer(); joinSentAt=Date.now(); sendMsg("join",{}); render(); }
+function leaveTeam(){ sendMsg("leave",{}); myTeam=null; savePlayer(); render(); }
+function plLeaderboard(){ return `<div class="log" style="font-size:1.05rem;width:100%;max-width:360px">${leaderboard().map((t,p)=>`<span style="display:flex;justify-content:space-between"><b style="color:${tc(t.i)}">${p+1}. ${esc(t.name)}</b><b class="num">${t.score}</b></span>`).join("")}</div>`; }
+function plFinal(){ if(drumOn()) return `<div class="pl-big drumroll">🥁</div><div class="bp-status">And the winner is…</div>`; const lb=leaderboard(); const w=lb[0]; const tie=lb.length>1&&lb[1].score===w.score; const me=G.teams[myTeam]; const mine=w.i===myTeam; return `<div class="pl-big">${tie?"🤝":mine?"🏆":"💐"}</div><h2 class="pl-h">${tie?"It's a tie!":mine?"Congratulations, "+esc(me.name)+"!":"Better luck next time"}</h2><div class="note">${tie?"Shared glory tonight.":mine?"You won the night with "+me.score+" points.":esc(w.name)+" took it with "+w.score+". You finished on "+me.score+"."}</div>${plLeaderboard()}`; }
+function plPercent(r,sl,rv){ const it=r.items[sl.i]; const sub=rv.sub&&rv.sub[myTeam]; const left=timerLeft();
+  if(rv.phase==="done"||rv.revealed){ const won=(rv.won||{})[myTeam]||0; const mine=sub&&sub.v!=null?sub.v+"%":"no answer"; return `<div class="eyebrow">The answer</div><div class="pl-big num">${it.a}%</div><div class="note">You said <b>${esc(mine)}</b></div><div class="pl-won ${won?"":"zero"}">${won?"+"+won+(won===r.pts.win?" · Closest!":" · Runner-up"):"No points this time"}</div>`; }
+  if(rv.phase==="closed") return `<div class="pl-big">🔒</div><div class="bp-status">Answers are in. Reveal on the TV in a moment…</div>`;
+  if(sub||sentFor===G.s) return `<div class="pl-big">✅</div><div class="bp-status">Submitted${sub&&sub.v!=null?": "+sub.v+"%":""}. Waiting for the other team…</div>`;
+  if(pctDraftSlide!==G.s){ pctDraft=""; pctDraftSlide=G.s; }
+  return `<div class="eyebrow">Question ${sl.i+1}</div><div class="pl-q">${esc(it.q)}</div><div class="pl-timer"><span class="tnum num">${left!=null?left:""}</span>s</div>
+    <div class="field"><label>Your guess, 0 to 100</label><input id="pct" type="number" inputmode="numeric" min="0" max="100" placeholder="%" value="${esc(pctDraft)}" oninput="pctDraft=this.value" style="font-size:2rem;text-align:center;font-family:var(--display)"></div>
+    <button class="btn primary" style="min-height:60px;font-size:1.2rem;width:100%" onclick="submitAnswer()">Submit</button><div class="note">Auto-submits when the timer runs out.</div>`; }
+function plRank(r,sl,rv){ const it=r.items[sl.i]; const sub=rv.sub&&rv.sub[myTeam]; const left=timerLeft();
+  if(rv.phase==="done"||rv.revealed){ const won=(rv.won||{})[myTeam]||0, n=(rv.correct||{})[myTeam]||0; const o=(sub&&sub.order)||[]; return `<div class="eyebrow">The real order</div><div class="rk-list">${it.items.map((x,i)=>`<div class="rk-row done ${o[i]===x?"ok":"no"}"><span class="i num">${i+1}</span><span>${esc(x)}</span><span class="m">${o[i]===x?"✓":"✗"}</span></div>`).join("")}</div><div class="pl-won ${won?"":"zero"}">${n}/${it.items.length} right${won?" · +"+won:""}${n===it.items.length?" · Perfect!":""}</div>`; }
+  if(rv.phase==="closed") return `<div class="pl-big">🔒</div><div class="bp-status">Orders are in. Reveal on the TV in a moment…</div>`;
+  if(sub||sentFor===G.s) return `<div class="pl-big">✅</div><div class="bp-status">Order submitted. Waiting for the other team…</div>`;
+  if(rankDraftSlide!==G.s||!rankDraft){ rankDraft=seededShuffle(it.items,G.s+7); rankDraftSlide=G.s; }
+  return `<div class="eyebrow">Rank ${sl.i+1}</div><div class="pl-q">${esc(it.q)}</div><div class="pl-timer"><span class="tnum num">${left!=null?left:""}</span>s</div><div class="note">Drag the rows, or use the arrows. Top is first.</div>
+    <div class="rk-list" id="rk">${rankDraft.map((x,i)=>`<div class="rk-row" data-item="${esc(x)}" onpointerdown="rkDown(event)" onpointermove="rkMove(event)" onpointerup="rkUp(event)" onpointercancel="rkUp(event)"><span class="i num">${i+1}</span><span class="rk-name">${esc(x)}</span><span class="rk-btns"><button class="btn sm" onpointerdown="event.stopPropagation()" onclick="rkMoveBy(${i},-1)">▲</button><button class="btn sm" onpointerdown="event.stopPropagation()" onclick="rkMoveBy(${i},1)">▼</button></span></div>`).join("")}</div>
+    <button class="btn primary" style="min-height:60px;font-size:1.2rem;width:100%" onclick="submitAnswer()">Submit order</button><div class="note">Auto-submits when the timer runs out.</div>`; }
+function plWho(r,sl,rv){ const ti=whoTeam(); const mine=ti===myTeam; const h=rv.hints||0, used=rv.guesses||0, left=Math.max(0,r.pts.guesses-used); const now=h?r.pts.hints[Math.min(h,5)-1]:r.pts.hints[0];
+  const dots=`<div class="pl-dots">${"●".repeat(left)}${"○".repeat(used)}</div><div class="note">${left} guess${left===1?"":"es"} left</div>`;
+  if(rv.done==="ok") return `<div class="pl-big">${mine?"🎯":"👏"}</div><div class="bp-status">${mine?"Got it on hint "+h+"!":esc(G.teams[ti].name)+" got it on hint "+h+"."}</div><div class="pl-won">${mine?"+"+rv.won:"+"+rv.won+" to "+esc(G.teams[ti].name)}</div>`;
+  if(rv.done==="x") return `<div class="pl-big">${mine?"😶":"👀"}</div><div class="bp-status">${mine?"Out of guesses. It was "+esc(r.items[sl.i].a)+".":esc(G.teams[ti].name)+" ran out of guesses."}</div><div class="pl-won zero">${mine?"No points this time":"0 points to "+esc(G.teams[ti].name)}</div>`;
+  if(!h) return `<div class="pl-big">🕵️</div><div class="bp-status">${mine?"Your person is up next. Answer out loud when the hints start.":esc(G.teams[ti].name)+"'s person. Watch the TV."}</div>${mine?dots:""}`;
+  return `<div class="eyebrow">Hint ${h} of 5 · worth ${now}</div><div class="pl-big">${mine?"🎤":"👀"}</div><div class="bp-status">${mine?"Answer out loud. The host enters it.":esc(G.teams[ti].name)+" are guessing."}</div>${dots}`; }
+function plBoard(r,rv){ const tt=(G.turn||0)%G.teams.length;
+  if(!rv.open) return `<div class="pl-big">${tt===myTeam?"🎯":"👀"}</div><div class="bp-status">${tt===myTeam?"Your pick! Call out a category and points.":esc(G.teams[tt].name)+" are picking a tile."}</div>`;
+  const [c,t]=rv.open.split("-").map(Number); const cat=r.categories[c], tile=cat.tiles[t]; const left=timerLeft();
+  if(rv.allin&&rv.allin.stage==="splash") return `<div class="pl-big">🎰</div><div class="bp-status">ALL IN!</div>`;
+  if(rv.allin){ const a=rv.allin; const mine=a.team===myTeam; const at=G.teams[a.team].score;
+    if(rv.revealed) return `<div class="pl-big">${a.result==="safe"?"😮‍💨":(a.winner===myTeam?"💰":"💥")}</div><div class="bp-status">${a.result==="safe"?(mine?"Phew. Your points are safe.":esc(G.teams[a.team].name)+" kept their points."):(mine?"Ouch. Down to zero.":(a.winner===myTeam?"You picked up "+a.half+"!":"Nobody got the half."))}</div>`;
+    if(rv.passTo!=null){ const pm=rv.passTo===myTeam; return `<div class="eyebrow">ALL IN · passed</div><div class="pl-big">${pm?"🎤":"💥"}</div><div class="bp-status">${pm?esc(G.teams[a.team].name)+" lost "+a.amt+". Answer right for "+a.half+"!":"You lost "+a.amt+". "+esc(G.teams[rv.passTo].name)+" are answering for "+a.half+"."}</div><div class="pl-timer ${pm?"":"dim"}"><span class="tnum num">${left!=null?left:""}</span>s</div>`; }
+    return `<div class="eyebrow">ALL IN · ${esc(cat.title)}</div><div class="pl-big">🎰</div><div class="bp-status">${mine?"Your entire "+at+" points are on the line. Answer out loud!":esc(G.teams[a.team].name)+" are betting everything."}</div><div class="pl-timer ${mine?"":"dim"}"><span class="tnum num">${left!=null?left:""}</span>s</div>`; }
+  const ti=rv.passTo!=null?rv.passTo:rv.turn; const pts=rv.passTo!=null?Math.round(tile.pts/2):tile.pts; const mine=ti===myTeam;
+  if(rv.revealed) return `<div class="pl-big">👀</div><div class="bp-status">Done. Back to the board.</div>`;
+  return `<div class="eyebrow">${esc(cat.title)} · ${pts} points</div><div class="pl-big">${mine?"🎤":"🤫"}</div><div class="bp-status">${mine?(rv.passTo!=null?"Passed to you for "+pts+". Answer out loud!":"Your tile. Answer out loud!"):esc(G.teams[ti].name)+" are answering…"}</div><div class="pl-timer ${mine?"":"dim"}"><span class="tnum num">${left!=null?left:""}</span>s</div>`; }
+function plEmoji(r,sl,rv){ const bz=G.buzz||{}; const first=bz.first||currentProv(); const mine=first&&first.peer===peerId; const lockedOut=(bz.locked||[]).includes(myTeam)||G.teams[myTeam].lock; const myPos=(bz.order||[]).findIndex(x=>x.team===myTeam); const passed=(bz.passed||[]).includes(myTeam)||passSentGen===(bz.gen||0);
+  let status, big, cls="";
+  if(bz.result){ const mine2=bz.result.team===myTeam; status=bz.result.ok?(mine2?"You got it! +"+bz.result.pts:esc(G.teams[bz.result.team].name)+" got it. It was "+esc(r.items[sl.i].a)+"."):(mine2?"Wrong, −"+bz.result.pen+". It was "+esc(r.items[sl.i].a)+".":esc(G.teams[bz.result.team].name)+" got it wrong. It was "+esc(r.items[sl.i].a)+"."); big=bz.result.ok?(mine2?"🎉":"🎬"):(mine2?"💔":"🎬"); }
+  else if(rv.revealed&&!bz.armed){ status="It was "+esc(r.items[sl.i].a); big="🎬"; }
+  else if(!bz.armed){ status="Wait for the next picture…"; big="⏳"; }
+  else if(lockedOut){ status="Locked out for this picture (−"+r.pts.win+")"; big="🔒"; cls="locked"; }
+  else if(mine){ status=bz.first?(bz.first.handed?"Passed to you! Answer out loud.":"YOU'RE FIRST! Answer out loud."):"Buzzed! Confirming…"; big="🥇"; cls="first"; }
+  else if(first){ const queued=myPos>=0||buzzSentGen===(bz.gen||0); status=first.handed?`${esc(G.teams[first.team].name)} buzzed next, it's theirs now`:`${esc(G.teams[first.team].name)} buzzed first${queued?(myPos>0?" · you're #"+(myPos+1)+" in line":" · you're next in line"):" · press to be next in line"}`; big=queued||first.handed?"😬":"BUZZ"; cls=queued||first.handed?"late":"queue"; }
+  else if(passed){ status="You passed. Waiting…"; big="🙅"; cls="late"; }
+  else if(buzzSentGen===(bz.gen||0)&&myPos<0){ status="Sending…"; big="📡"; cls="sent"; }
+  else { status=bz.passOpen?"Know it? Buzz. Not sure? Pass. Wrong costs "+r.pts.win+".":"Ready. Hit it when you know the film!"; big="BUZZ"; cls="armed"; }
+  return `<button class="bp-btn ${cls}" ${cls==="armed"||cls==="queue"?"":"disabled"} onclick="sendBuzz()"><span>${big}</span></button><div class="bp-status">${status}</div>${cls==="armed"&&bz.passOpen?`<button class="btn" style="min-width:140px" onclick="sendPass()">Pass</button>`:""}`; }
+function renderBuzz(){
+  const linked=srvMode||(relay&&relayState==="on");
+  if(!linked){ $app.innerHTML=`<div class="lobby"><div><div class="eyebrow">${window.PLAYER_ONLY?esc(PACK.title)+" · "+esc(PACK.subtitle):"Player device"}</div><h1 style="font-size:2rem">${window.PLAYER_ONLY?"Join the quiz":"Not connected"}</h1></div><p>${srvMode===false&&/^https?:/.test(location.protocol)&&!window.PLAYER_ONLY?"Open this page from the address the quiz server printed.":"Type the room code shown on the TV, then tap Connect."}</p>${relayAvailable()?`<div class="card" style="width:100%;max-width:420px"><div class="field"><label>Room code</label><input id="room" maxlength="6" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;letter-spacing:.2em;font-family:var(--display);font-size:1.3rem" value="${esc(relayCode||savedCode())}"></div><button class="btn primary" onclick="relayConnect(document.getElementById('room').value)">Connect</button><div class="note">${esc(relayMsg||"")}</div></div>`:""}${window.PLAYER_ONLY?"":`<button class="btn ghost" onclick="location.hash=''">Back</button>`}</div>`; return; }
+  if(myTeam!=null&&myGen!==(G.rgen||0)){ myTeam=null; savePlayer(); }
+  const joined=joinedTeam();
+  if(myTeam==null||!G.teams[myTeam]){ const P=G.players||{}; $app.innerHTML=`<div class="lobby"><div><div class="eyebrow">Player device</div><h1 style="font-size:2rem">Pick your team</h1></div><p>One phone per team. Choose carefully: once a team has a device it is locked until the host resets the game.</p><div class="card" style="width:100%;max-width:420px">${G.teams.map((t,i)=>{ const taken=P[i]&&P[i].peer!==peerId; return `<button class="btn team ${taken?"":"fill"}" style="--tc:${tc(i)};min-height:72px;font-size:1.3rem" ${taken?"disabled":""} onclick="pickTeam(${i})">${esc(t.name)}${taken?" · taken":""}</button>`; }).join("")}</div></div>`; return; }
+  const t=G.teams[myTeam];
+  if(joined!==myTeam){ const p=(G.players||{})[myTeam]; const taken=p&&p.peer!==peerId; $app.innerHTML=`<div class="lobby"><div class="pl-big">${taken?"🚫":"📡"}</div><h1 style="font-size:1.8rem;color:${tc(myTeam)}">${esc(t.name)}</h1><p>${taken?"This team already has a device. One phone per team. Ask the host to release it.":"Joining… hold on."}</p></div>`; return; }
+  const sl=cur(), r=roundOf(sl), rv=G.rev["s"+G.s]||{};
+  const top=`<div class="bp-top"><span style="color:${tc(myTeam)};font-weight:700">${esc(t.name)}</span><span class="num" style="color:var(--muted)">${t.score} pts</span></div>`;
+  let body="";
+  if(G.phase==="setup") body=`<div class="pl-big">⏳</div><div class="bp-status">You're in. Waiting for the host to start the show.</div>`;
+  else if(sl.k==="title") body=`<div class="pl-big">🎬</div><div class="bp-status">Here we go. Eyes on the TV.</div>`;
+  else if(sl.k==="rules") body=`<div class="pl-big">📜</div><div class="bp-status">Ground rules are on the TV. Your score is up top, always.</div>`;
+  else if(sl.k==="intro") body=`<div class="eyebrow">${esc(r.tag)}</div><h2 class="pl-h">${esc(r.name)}</h2><div class="note" style="max-width:34ch">${esc(r.rule)}</div>`;
+  else if(sl.k==="scores") body=`<h2 class="pl-h">Scores so far</h2>${plLeaderboard()}`;
+  else if(sl.k==="final") body=plFinal();
+  else if(sl.k==="board") body=plBoard(r,rv);
+  else if(r.type==="percent") body=plPercent(r,sl,rv);
+  else if(r.type==="rank") body=plRank(r,sl,rv);
+  else if(r.type==="emoji") body=plEmoji(r,sl,rv);
+  else if(r.type==="whoami") body=plWho(r,sl,rv);
+  $app.innerHTML=`<div class="player" style="--tc:${tc(myTeam)}">${top}<div class="pl-body">${body}</div></div>`;
+}
+function timerLeft(){ if(!G.timer.end) return null; return Math.max(0,Math.ceil((G.timer.end-Date.now())/1000)); }
+
+/* ===================== audio ===================== */
+let actx=null;
+function beep(freq,dur,type){ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(); o.type=type||"sine"; o.frequency.value=freq; g.gain.value=.12; o.connect(g); g.connect(actx.destination); o.start(); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+dur); o.stop(actx.currentTime+dur);}catch(e){} }
+function sting(kind){ if(mode!=="tv"||!tvStarted) return; if(kind==="reveal"){beep(660,.15);setTimeout(()=>beep(990,.3),120);} else if(kind==="good"){beep(523,.12);setTimeout(()=>beep(784,.12),100);setTimeout(()=>beep(1047,.3),200);} else if(kind==="bad"){beep(220,.4,"sawtooth");} else if(kind==="tick"){beep(880,.08,"square");} else if(kind==="allin"){[0,120,240,360].forEach((d,i)=>setTimeout(()=>beep(440+i*110,.2,"square"),d));} else if(kind==="buzz"){beep(1200,.08,"square");setTimeout(()=>beep(1600,.25,"square"),80);} }
+
+/* ===================== render root ===================== */
+function routeMode(){ if(window.PLAYER_ONLY){ mode="buzz"; return; } const h=(location.hash||"").replace("#",""); mode=h==="tv"?"tv":h==="host"?"host":h==="buzz"?"buzz":"lobby"; }
+let lastSig="";
+function render(){
+  ensurePack();
+  if(mode==="host"){ const ae=document.activeElement; if(ae&&(ae.tagName==="INPUT")&&$app.contains(ae)){ ae.addEventListener("blur",()=>render(),{once:true}); return; } }
+  if(mode==="buzz"){ const ae=document.activeElement; if(ae&&ae.tagName==="INPUT"&&$app.contains(ae)&&ae.id==="pct"){ const rv=G.rev["s"+G.s]||{}; if(rv.phase==="open"&&sentFor!==G.s){ ae.addEventListener("blur",()=>render(),{once:true}); return; } } }
+  if(mode==="lobby") renderLobby(); else if(mode==="tv") renderTV(); else if(mode==="buzz") renderBuzz(); else renderHost();
+}
+
+/* ===================== LOBBY ===================== */
+function renderLobby(){
+  $app.innerHTML=`<div class="lobby">
+    <div><div class="eyebrow">A quiz night for friends</div><h1>${esc(PACK.title)}</h1></div>
+    <p>${srvMode?`Open the <b>TV view</b> here on the laptop, and the <b>Host remote</b> on your phone at <b>${esc(location.origin)}</b> (same Wi-Fi). The phone drives the TV.`:(window.claude&&window.claude.use)?`Open the <b>TV view</b> on the laptop plugged into the TV, and the <b>Host remote</b> on your phone. Both devices need to be signed in to the same Claude account. The phone drives the TV.`:`This copy is not connected to a second screen. For phone-plus-TV, run <b>server.py</b> on the laptop and open the address it prints on both devices. Or play on one device with the Host remote in Mirror mode.`}</p>
+    <div class="choices">
+      <button class="bigbtn teal" onclick="location.hash='tv'"><b>📺 TV view</b><span>Full-screen stage for the players. No controls, no answers.</span></button>
+      <button class="bigbtn hot" onclick="location.hash='host'"><b>🎙️ Host remote</b><span>Questions, answers, scoring and the timer. Keep this one to yourself.</span></button>
+      <button class="bigbtn" style="border-color:var(--accent)" onclick="location.hash='buzz'"><b>🔔 Player buzzer</b><span>One phone per team. Pick your team, then hit the big button in the emoji round.</span></button>
+    </div>
+    ${relayAvailable()?`<div class="card" style="width:100%;max-width:640px;text-align:left"><h3>Link phone and TV over the internet</h3><div class="note">Open this same file on both devices. The TV shows a <b>room code</b> on its waiting screen; type it here on the phone and tap Connect. Both devices need internet. It goes through a public relay, so use a fresh code each night.</div>
+      <div class="row"><div class="field" style="flex:2"><label>Room code</label><input id="room" maxlength="6" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;letter-spacing:.2em;font-family:var(--display);font-size:1.3rem" value="${esc(relayCode||savedCode())}"></div><button class="btn primary" style="flex:1;align-self:flex-end" onclick="relayConnect(document.getElementById('room').value)">Connect</button></div>
+      <div class="note"><span class="dot ${relayState==="on"?"on":relayState==="connecting"?"warn":""}"></span>${esc(relayMsg||(relayState==="off"?"Not connected.":""))}</div></div>`:""}
+    ${G.phase==="end"?`<p style="color:var(--accent)">The last game finished. Open the Host remote and tap <b>New game</b> to reset the scores.</p>`:""}
+    <p style="font-size:.85rem">Only one device? Open the Host remote and switch on <b>Mirror mode</b> in its menu: answers stay hidden until you reveal them.</p>
+  </div>`;
+}
+
+/* ===================== TV ===================== */
+function renderTV(){
+  const sl=cur(), r=roundOf(sl);
+  let main="";
+  if(G.phase==="setup") main=`<div class="stage tv-title"><div class="with">Ruchika &amp; Anand present</div><h1>${esc(PACK.title)}<span>${esc(PACK.subtitle)}</span></h1><div class="waiting">Waiting for the host to start the show…</div>${relayCode&&relayAvailable()?`<div class="pill" style="font-size:clamp(1.2rem,2.6vw,2.2rem);letter-spacing:.2em;border-color:var(--accent)">ROOM <b>${esc(relayCode)}</b></div><div class="waiting" style="font-size:.8em">${relayState==="on"?"Type this code on the phone's start screen":esc(relayMsg||"Connecting to relay…")}</div>`:""}</div>`;
+  else if(sl.k==="title") main=`<div class="stage tv-title"><div class="with">Ruchika &amp; Anand present</div><h1>${esc(PACK.title)}<span>${esc(PACK.subtitle)}</span></h1><div class="waiting">${G.teams.map((t,i)=>`<span style="color:${tc(i)};font-weight:700">${esc(t.name)}</span>`).join(" &nbsp;vs&nbsp; ")}</div></div>`;
+  else if(sl.k==="rules") main=tvRules();
+  else if(sl.k==="intro") main=tvIntro(r);
+  else if(sl.k==="scores") main=tvScores(r.tag);
+  else if(sl.k==="final") main=drumOn()?tvDrum():tvFinal();
+  else if(sl.k==="board") main=tvBoard(r);
+  else if(r.type==="percent") main=tvPercent(r,sl);
+  else if(r.type==="rank") main=tvRank(r,sl);
+  else if(r.type==="emoji") main=tvEmoji(r,sl);
+  else if(r.type==="whoami") main=tvWho(r,sl);
+  const left=timerLeft();
+  const roundLbl=r?`${esc(r.tag)} · ${esc(r.name)}`:"";
+  const hue=sl.k==="title"||sl.k==="final"||G.phase==="setup"?265:[330,45,175,265,10][sl.r||0];
+  const showTotals=sl.k==="scores"||(sl.k==="final"&&!drumOn());
+  const entered=G.s!==lastSlide||G.phase!==lastPhase; lastSlide=G.s; lastPhase=G.phase;
+  if(entered) main=main.replace('class="stage','class="stage enter');
+  const newN=(G.n||0)-(lastN==null?(G.n||0):lastN); const newEntries=lastN==null?[]:G.log.slice(Math.max(0,G.log.length-newN)); lastN=G.n||0;
+  const QUIET=["closest","runner-up","slots"]; const bursts=newEntries.filter(e=>!QUIET.includes(e.r)); const bumpTeam=newEntries.length?newEntries[newEntries.length-1].t:-1;
+  $app.innerHTML=`<div class="tv ${tvStarted?"":"show-cursor"} ${left!=null&&left<=5?"low":""}" style="--hue:${hue}"><div class="aurora"><i></i><i></i><i></i></div>
+    <div class="tv-top"><div class="tv-brand">${esc(PACK.title)}<small>${esc(PACK.subtitle)}</small></div><div class="tv-round">${roundLbl}</div><div class="tv-timer ${left!=null?"on":""} ${left!=null&&left<=5?"low":""}"><div class="ring" style="--p:${left!=null?(left/G.timer.dur*100):100}%"></div><span class="num tnum">${left!=null?left:""}</span></div></div>
+    <div class="tv-main">${main}</div>
+    <div class="tv-bottom">${G.teams.map((t,i)=>`<div class="scorechip ${activeTeam()===i?"ctrl":""} ${t.lock?"locked":""} ${bumpTeam===i?"bump":""}" style="--tc:${tc(i)}"><span class="n">${esc(t.name)}</span>${showTotals?`<span class="s num">${t.score}</span>`:`<span class="s" style="font-size:1em;opacity:.6">${i===activeTeam()?"●":""}</span>`}</div>`).join("")}</div>
+    ${(()=>{ const bz=G.buzz||{}; if(!buzzSlide()) return "";
+      if(bz.result) return bz.result.ok?`<div class="buzzbar hit" style="--tc:${tc(bz.result.team)}">✓ ${esc(G.teams[bz.result.team].name)} got it! +${bz.result.pts}</div>`:`<div class="buzzbar hit bad" style="--tc:var(--bad)">✗ ${esc(G.teams[bz.result.team].name)} wrong −${bz.result.pen}</div>`;
+      const f=bz.first||currentProv(); if(f) return `<div class="buzzbar hit" style="--tc:${tc(f.team)}">🔔 ${esc(G.teams[f.team].name)} ${f.handed?"buzzed next, over to them":"buzzed first!"}</div>`;
+      if(bz.lastWrong&&bz.armed){ const open=G.teams.map((t,i)=>i).filter(i=>!(bz.locked||[]).includes(i)&&!(bz.passed||[]).includes(i)).map(i=>esc(G.teams[i].name)); return `<div class="buzzbar hit bad wrap" style="--tc:var(--bad)">✗ ${esc(G.teams[bz.lastWrong.team].name)} wrong −${bz.lastWrong.pen}<br>${open.length?open.join(" & ")+", buzz or pass":"waiting…"}</div>`; }
+      if(bz.armed) return `<div class="buzzbar armed">🔔 ${bz.passOpen?"Buzz or pass":"Buzzers armed"}</div>`; return ""; })()}
+    ${G.overlay==="scores"&&sl.k!=="scores"&&sl.k!=="final"?`<div class="overlay">${tvScores("Scores so far")}</div>`:""}
+    ${tvStarted?"":`<div class="tapstart" onclick="startTV()"><h2>Tap once to start the TV</h2><p>Goes full screen and switches on the sound.</p></div>`}
+  </div>`;
+  bursts.forEach((e,i)=>setTimeout(()=>showBurst(e),i*1300));
+  const bzKey=G.buzz&&G.buzz.first?G.buzz.first.peer+":"+G.buzz.gen:""; if(bzKey&&bzKey!==lastBuzzKey&&!(provBuzz&&provBuzz.peer===(G.buzz.first||{}).peer)) sting("buzz"); lastBuzzKey=bzKey;
+  const sig=JSON.stringify([G.s,rev(),G.overlay]);
+  if(lastSig&&sig!==lastSig){ const rv=rev(); if(sl.k==="board"&&rv.open&&rv.allin&&rv.allin.stage==="splash") sting("allin"); else if(rv.revealed||rv.shown||rv.hints) sting("reveal"); }
+  lastSig=sig;
+}
+let lastSlide=-1, lastPhase=null, lastN=null, lastHintsKey="", lastBuzzKey="";
+function showBurst(e){ if(!tvStarted) return; const t=G.teams[e.t]; if(!t||!e.p) return; const d=document.createElement("div"); d.className="burst "+(e.p>0?"good":"bad"); d.style.setProperty("--tc",tc(e.t));
+  const bits=e.p>0?`<div class="bits">${Array.from({length:46},(_,i)=>`<i style="--dx:${((Math.random()*2-1)*70).toFixed(0)}vw;--dy:${((Math.random()*2-1)*70).toFixed(0)}vh;--c:${i%3?TEAM_COLORS[i%4]:tc(e.t)};animation-delay:${(Math.random()*.15).toFixed(2)}s"></i>`).join("")}</div>`:"";
+  d.innerHTML=`${bits}<b>${e.p>0?"+":"−"}${Math.abs(e.p)}</b><span>${esc(t.name)}${e.r==="applause"?" 👏":""}</span>`; document.body.appendChild(d); sting(e.p>0?"good":"bad"); setTimeout(()=>d.remove(),1600); }
+function startTV(){ tvStarted=true; try{ const el=document.documentElement; (el.requestFullscreen&&el.requestFullscreen()||Promise.resolve()).catch(()=>{}); }catch(e){} try{ navigator.wakeLock&&navigator.wakeLock.request("screen").catch(()=>{}); }catch(e){} beep(880,.1); render(); }
+const RULES=["There are 5 rounds. Your team's score is on your device at all times.","You answer from your device too: type, drag, and buzz.","Some rounds take points away for a wrong answer, so guess with care.","Every question has a timer, on the TV and on your device. When it runs out, your chance ends.","The host has the final say. Always."];
+function tvRules(){ return `<div class="stage tv-rules"><div class="rn" style="color:var(--hot);letter-spacing:.2em;text-transform:uppercase;font-weight:700;font-size:clamp(1rem,2vw,1.6rem)">Before we begin</div><h2 style="font-size:clamp(2rem,5.5vw,5.5rem);color:var(--accent)">Ground rules</h2><ol class="rules">${RULES.map((x,i)=>`<li style="animation-delay:${(i*.18).toFixed(2)}s"><span class="i num">${i+1}</span><span>${esc(x)}</span></li>`).join("")}</ol><div class="wish">Wish you all the best!</div></div>`; }
+function tvIntro(r){
+  const pts=r.type==="percent"?[`Closest <b>${r.pts.win}</b>`,`Runner-up <b>${r.pts.second}</b>`]:r.type==="board"?["Your pick <b>full points</b>","Passed over <b>half</b>","One tile is <b>All In</b>"]:r.type==="rank"?[`Each correct slot <b>${r.pts.slot}</b>`,`Perfect order <b>+${r.pts.perfect}</b>`]:r.type==="emoji"?[`Right <b>+${r.pts.win}</b>`,`Wrong <b>−${r.pts.win}</b>`,"Buzz first"]:["One team per person","Hint 1 <b>500</b> … hint 5 <b>100</b>","<b>3</b> guesses","Wrong costs <b>nothing</b>"];
+  return `<div class="stage tv-intro"><div class="rn">${esc(r.tag)}</div><h2>${r.name.split(" ").map((w,i)=>`<span class="w" style="animation-delay:${(i*.09).toFixed(2)}s">${esc(w)}</span>`).join(" ")}</h2><div class="rule">${esc(r.rule)}</div><div class="pts">${pts.map(p=>`<span class="pill">${p}</span>`).join("")}</div></div>`;
+}
+function tvScores(title){
+  const lb=leaderboard(), max=Math.max(1,...lb.map(t=>t.score));
+  return `<div class="stage"><div class="eyebrow" style="font-size:clamp(.9rem,1.8vw,1.4rem)">${esc(title)}</div><div class="lead">${lb.map((t,p)=>`<div class="leadrow ${p===0?"first":""}" style="--tc:${tc(t.i)}"><span class="pos num">${p+1}</span><span class="n">${esc(t.name)}</span><span class="s num">${t.score}</span><div class="bar" style="width:${Math.max(4,t.score/max*100)}%"></div></div>`).join("")}</div></div>`;
+}
+function tvDrum(){ return `<div class="stage drum"><div class="eyebrow" style="font-size:clamp(1rem,2vw,1.6rem)">The moment of truth</div><div class="drumroll">🥁</div><h2 style="font-size:clamp(2rem,6vw,6rem);color:var(--accent)">And the winner is<span class="dots"><i>.</i><i>.</i><i>.</i></span></h2></div>`; }
+function tvFinal(){
+  const lb=leaderboard(); const w=lb[0]; const tie=lb.length>1&&lb[1].score===w.score;
+  const conf=Array.from({length:40},(_,i)=>`<i style="left:${(i*2.5)%100}%;--c:${TEAM_COLORS[i%4]};animation-duration:${3+(i%5)*.7}s;animation-delay:${(i%7)*-.6}s"></i>`).join("");
+  const order=lb.length>=3?[1,0,2]:[0,1];
+  const podium=`<div class="podium">${order.filter(i=>lb[i]).map(i=>`<div class="step p${i}" style="--tc:${tc(lb[i].i)}"><div class="n">${esc(lb[i].name)}</div><div class="block"><span class="pos num">${i+1}</span><span class="s num">${lb[i].score}</span></div></div>`).join("")}</div>`;
+  return `<div class="confetti">${conf}</div><div class="stage winner" style="--tc:${tc(w.i)}"><div class="eyebrow">${tie?"It's a tie at the top":"And the nation's winner is"}</div><h1>${esc(w.name)}</h1>${podium}</div>`;
+}
+function subPills(rv){ return `<div class="sub-pills">${G.teams.map((t,i)=>{ const s=rv.sub&&rv.sub[i]; return `<span class="pill" style="border-color:${tc(i)};color:${tc(i)}">${esc(t.name)} · ${s?"answered ✓":"thinking…"}</span>`; }).join("")}</div>`; }
+function tvPercent(r,sl){
+  const it=r.items[sl.i], rv=rev();
+  const guesses=G.teams.map((t,i)=>({i,g:rv.guess&&rv.guess[i]!=null&&rv.guess[i]!==""?Number(rv.guess[i]):null}));
+  const shown=guesses.filter(g=>g.g!=null);
+  let win=new Set(); if(rv.revealed&&shown.length){ const best=Math.min(...shown.map(g=>Math.abs(g.g-it.a))); shown.forEach(g=>{ if(Math.abs(g.g-it.a)===best) win.add(g.i); }); }
+  return `<div class="stage"><div class="eyebrow">Question ${sl.i+1} of ${r.items.length}</div><div class="q">${esc(it.q)}</div>
+    ${rv.revealed?`<div class="guesses">${G.teams.map((t,i)=>{ const g=guesses[i]; return `<div class="guess ${win.has(i)?"win":""}" style="--tc:${tc(i)}"><div class="n">${esc(t.name)}</div><div class="g num">${g.g!=null?g.g+"%":"—"}</div>${rv.won&&rv.won[i]?`<div class="n" style="color:var(--good)">+${rv.won[i]}</div>`:""}</div>`; }).join("")}</div><div class="ans num">${it.a}%</div>`
+    :rv.phase==="closed"?`<div class="sub">Answers are in…</div>`:`${subPills(rv)}<div class="sub">Type your guess on your phone. Closest wins ${r.pts.win}.</div>`}</div>`;
+}
+function tvBoard(r){
+  const rv=rev(), used=rv.used||{};
+  if(rv.open){
+    const [c,t]=rv.open.split("-").map(Number); const cat=r.categories[c], tile=cat.tiles[t];
+    if(rv.allin&&rv.allin.stage==="splash") return `<div class="stage"><div class="allin">ALL IN<small>${esc(cat.title)}</small></div></div>`;
+    let who;
+    if(rv.allin){ const a=rv.allin; if(rv.passTo!=null&&!rv.revealed) who=`<span class="pill" style="border-color:${tc(rv.passTo)};color:${tc(rv.passTo)}">${esc(G.teams[a.team].name)} lost ${a.amt} · passed to ${esc(G.teams[rv.passTo].name)} for ${a.half}</span>`; else who=`<span class="pill" style="border-color:${tc(a.team)};color:${tc(a.team)}">ALL IN · ${esc(G.teams[a.team].name)} · ${rv.revealed?(a.result==="safe"?"points safe":"lost "+a.amt+(a.winner!=null?" · "+esc(G.teams[a.winner].name)+" +"+a.half:"")):G.teams[a.team].score+" points on the line"}</span>`; }
+    else { const ti=rv.passTo!=null?rv.passTo:rv.turn; const p=rv.passTo!=null?Math.round(tile.pts/2):tile.pts; who=`<span class="pill" style="border-color:${tc(ti)};color:${tc(ti)}">${rv.passTo!=null?"Passed to ":""}${esc(G.teams[ti].name)} · ${p} points</span>`; }
+    return `<div class="stage tileview"><div class="cat">${esc(cat.title)}</div><div class="wagers">${who}</div><div class="q">${esc(tile.q)}</div>${rv.revealed?`<div class="ans">${esc(tile.a)}</div>`:""}</div>`;
+  }
+  const tt=(G.turn||0)%G.teams.length;
+  return `<div class="stage" style="gap:1.4vh"><div class="wagers"><span class="pill" style="border-color:${tc(tt)};color:${tc(tt)}">${esc(G.teams[tt].name)} to pick</span></div><div class="board" style="--cols:${r.categories.length||1}">${r.categories.map(c=>`<div class="cat"><span>${esc(c.title)}</span></div>`).join("")}${[0,1,2,3].map(t=>r.categories.map((c,ci)=>`<div class="tile ${used[ci+"-"+t]?"used":""} num" style="animation-delay:${(t*.06+ci*.03).toFixed(2)}s">${c.tiles[t].pts}</div>`).join("")).join("")}</div></div>`;
+}
+function tvRank(r,sl){
+  const it=r.items[sl.i], rv=rev(), shown=rv.shown||0;
+  const pool=seededShuffle(it.items,G.s+7).filter(x=>it.items.indexOf(x)>=shown);
+  const results=rv.revealed?`<div class="sub-pills">${G.teams.map((t,i)=>`<span class="pill" style="border-color:${tc(i)};color:${tc(i)}">${esc(t.name)} · ${(rv.correct||{})[i]||0}/${it.items.length}${(rv.won||{})[i]?" · +"+rv.won[i]:""}</span>`).join("")}</div>`:rv.phase==="closed"?`<div class="sub">Orders are in…</div>`:subPills(rv);
+  return `<div class="stage"><div class="eyebrow">Rank ${sl.i+1} of ${r.items.length}</div><div class="q sm">${esc(it.q)}</div>${results}
+    ${shown<it.items.length?`<div class="pool">${pool.map(x=>`<span class="pill">${esc(x)}</span>`).join("")}</div>`:""}
+    <div class="ranklist">${it.items.map((x,i)=>`<div class="rankrow ${i<shown?"rev":"pending"}"><span class="i num">${i+1}</span><span>${i<shown?esc(x):"?"}</span><span class="m">${i<shown?esc(it.meta[i]):""}</span></div>`).join("")}</div></div>`;
+}
+function tvEmoji(r,sl){
+  const it=r.items[sl.i], rv=rev();
+  return `<div class="stage"><div class="eyebrow">Picture ${sl.i+1} of ${r.items.length}</div><div class="emoji">${graphemes(it.emoji).map((g,i)=>`<span class="g" style="animation-delay:${(i*.14).toFixed(2)}s">${emojiHTML(g)}</span>`).join("")}</div>${rv.revealed?`<div class="ans">${esc(it.a)}</div>`:`<div class="sub">Name the film</div>`}</div>`;
+}
+function tvWho(r,sl){
+  const it=r.items[sl.i], rv=rev(), h=rv.hints||0, ti=whoTeam(), used=rv.guesses||0, left=Math.max(0,r.pts.guesses-used);
+  const now=h?r.pts.hints[Math.min(h,5)-1]:r.pts.hints[0];
+  const hk=G.s+":"+h; const hintNew=hk!==lastHintsKey; lastHintsKey=hk;
+  const chip=`<div class="wagers"><span class="pill" style="border-color:${tc(ti)};color:${tc(ti)}">${esc(G.teams[ti].name)}'s turn</span>${h&&!rv.revealed?`<span class="pill" style="border-color:var(--accent);color:var(--accent)">Worth <b>${now}</b> now</span>`:""}${h?`<span class="pill">Guesses ${"●".repeat(left)}${"○".repeat(used)}</span>`:""}</div>`;
+  return `<div class="stage"><div class="eyebrow">Who am I? · ${sl.i+1} of ${r.items.length}</div>${chip}
+    ${!h&&!rv.revealed?`<div class="q">Who am I?</div><div class="sub">Five hints. 500 points on the first, 100 on the last. Three guesses.</div>`:""}
+    ${h?`<div class="hints">${it.hints.slice(0,h).map((x,i)=>`<div class="hint ${i===h-1&&hintNew?"new":""}"><span class="i num">${i+1}</span><span>${esc(x)}</span></div>`).join("")}</div>`:""}
+    ${rv.revealed?`<div class="ans">${esc(it.a)}${rv.done?`<small>${rv.done==="ok"?esc(G.teams[ti].name)+" gets "+rv.won:"No points this time"}</small>`:""}</div>`:""}</div>`;
+}
+
+/* ===================== HOST ===================== */
+let mirror=false; try{ mirror=localStorage.getItem("nwtg-mirror")==="1"; }catch(e){}
+function renderHost(){
+  if(G.phase==="setup") return builderOpen?renderBuilder():renderSetup();
+  const sl=cur(), r=roundOf(sl);
+  let body="";
+  if(sl.k==="title") body=`<div class="card"><h3>Title card is on the TV</h3><div class="note">Introduce the teams, then hit Next for the ground rules.</div></div>`;
+  else if(sl.k==="rules") body=`<div class="card"><h3>Ground rules are on the TV</h3><div class="log">${RULES.map((x,i)=>`<span><b>${i+1}.</b> ${esc(x)}</span>`).join("")}</div><div class="note">Read them out, then Next for Round 1.</div></div>`;
+  else if(sl.k==="intro") body=`<div class="card"><div class="eyebrow">${esc(r.tag)}</div><h3>${esc(r.name)}</h3><div class="note">${esc(r.rule)}</div></div>`;
+  else if(sl.k==="scores") body=`<div class="card"><h3>Scoreboard</h3>${hostLeaderboard()}</div>`;
+  else if(sl.k==="final") body=`<div class="card"><h3>Winner on screen</h3>${hostLeaderboard()}</div><div class="card"><h3>Play again?</h3><div class="note">Wipes the scores and every reveal, keeps the team names, and takes you back to team setup. The TV goes back to its waiting screen.</div>${resetArmed?`<div class="row"><button class="btn hot" onclick="resetGame()">Yes, start a new game</button><button class="btn" onclick="resetArmed=false;render()">Not yet</button></div>`:`<button class="btn primary" onclick="resetArmed=true;render()">New game…</button>`}</div>`;
+  else if(sl.k==="board") body=hostBoard(r);
+  else if(r.type==="percent") body=hostPercent(r,sl);
+  else if(r.type==="rank") body=hostRank(r,sl);
+  else if(r.type==="emoji") body=hostEmoji(r,sl);
+  else if(r.type==="whoami") body=hostWho(r,sl);
+  const left=timerLeft();
+  $app.innerHTML=`<div class="host">
+    <div class="h-top"><div class="h-scores">${G.teams.map((t,i)=>`<div class="sc ${activeTeam()===i?"ctrl":""} ${t.lock?"locked":""}" style="--tc:${tc(i)}"><div class="n">${esc(t.name)}</div><div class="s num">${t.score}</div></div>`).join("")}</div>
+      <div class="h-status"><span id="status"></span><span>${esc(PACK.level)} · ${esc(r?r.tag+" · "+r.name:sl.label)}</span></div></div>
+    <div class="h-body">${body}
+      ${G.log.length?`<div class="card"><div class="row"><div class="log" style="flex:3">${G.log.slice(-3).reverse().map(e=>`<span><b>${e.p>0?"+":""}${e.p}</b> ${esc(G.teams[e.t].name)} ${e.r?"· "+esc(e.r):""}</span>`).join("")}</div><button class="btn sm ghost" style="flex:1" onclick="undo()">Undo</button></div></div>`:""}
+    </div>
+    <div class="h-nav">
+      <div class="r1"><button class="btn" onclick="go(G.s-1)" ${G.s===0?"disabled":""}>◀ Back</button><button class="btn ghost pos" onclick="openSheet('jump')"><span>${esc(sl.label)}</span><small>${G.s+1} / ${SLIDES.length} · tap to jump</small></button><button class="btn primary" onclick="go(G.s+1)" ${G.s>=SLIDES.length-1?"disabled":""}>Next ▶</button></div>
+      <div class="r2"><button class="btn ${left!=null?"hot":""}" onclick="toggleTimer()">⏱ ${left!=null?`<span class="tnum num">${left}</span>s`:G.timer.dur+"s timer"}</button><button class="btn ${G.overlay==="scores"?"primary":""}" onclick="G.overlay=G.overlay==='scores'?null:'scores';pushState()">🏆 Scores</button><button class="btn" onclick="openSheet('menu')">☰ Menu</button></div>
+    </div>
+    ${uiSheet?renderSheet():""}
+  </div>`;
+  updateStatus();
+}
+function updateStatus(){
+  const el=document.getElementById("status"); if(!el) return;
+  const relayOn=relayState==="on"; if(relayCode&&!srvMode&&!room) peersTV=(Date.now()-relayTvSeen<30000)?1:0;
+  const tv=peersTV>0; const live=!!room||srvMode||relayOn;
+  const dbTxt=srvMode?(dbState==="error"?"server lost":"via Wi-Fi server"):relayOn?"relay "+relayCode:relayState==="connecting"?"relay connecting…":relayState==="error"?"relay failed":dbState==="synced"?"saved":dbState==="connecting"?"connecting…":dbState==="error"?"sync error":"local only";
+  el.innerHTML=`<span class="dot ${tv?"on":live?"warn":""}"></span>${tv?"TV connected":live?"TV not open yet":"no live link"} · ${dbTxt}${mirror?" · mirror":""}`;
+}
+function ansBox(a,shown){ return `<div class="a ${mirror&&!shown?"hid":""}" ${mirror&&!shown?'onclick="this.classList.toggle(\'hid\')"':""}>${esc(a)}</div>`; }
+function teamBtns(fn,label){ return `<div class="row">${G.teams.map((t,i)=>`<button class="btn team" style="--tc:${tc(i)}" onclick="${fn}(${i})" ${t.lock?"disabled":""}>${esc(t.name)}${label?" "+label:""}</button>`).join("")}</div>`; }
+function hostLeaderboard(){ return `<div class="log" style="font-size:1rem">${leaderboard().map((t,p)=>`<span style="display:flex;justify-content:space-between"><b style="color:${tc(t.i)}">${p+1}. ${esc(t.name)}</b><b class="num">${t.score}</b></span>`).join("")}</div>`; }
+
+/* percent */
+function subStatus(rv,fmt){ return `<div class="log">${G.teams.map((t,i)=>{ const s=rv.sub&&rv.sub[i]; return `<span><b style="color:${tc(i)}">${esc(t.name)}</b> · ${s?fmt(s):"thinking…"}${(rv.won||{})[i]?` · <b style="color:var(--good)">+${rv.won[i]}</b>`:""}</span>`; }).join("")}</div>`; }
+function hostPercent(r,sl){
+  const it=r.items[sl.i], rv=rev(); rv.guess=rv.guess||[]; const left=timerLeft();
+  const ph=rv.phase||"open";
+  return `<div class="card"><div class="eyebrow">Question ${sl.i+1} of ${r.items.length}</div><div class="q">${esc(it.q)}</div>${ansBox(it.a+"%",rv.revealed)}${it.note?`<div class="note">${esc(it.note)}</div>`:""}</div>
+  <div class="card"><h3>${ph==="open"?"⏱ "+(left!=null?left+"s":"")+" · answers open":ph==="closed"?"Answers in · revealing in a moment":"Revealed"}</h3>
+    ${subStatus(rv,s=>s.v!=null?s.v+"%":"no answer")}
+    <div class="note">Players type on their phones. Closes when both are in or after ${T_PCT}s, then reveals 2 seconds later. Closest ${r.pts.win}, runner-up ${r.pts.second}.</div>
+    <div class="row">${ph==="open"?`<button class="btn" onclick="closeSubmissions()">Close now</button>`:""}${ph!=="done"?`<button class="btn primary" onclick="revealPercentAuto()">Reveal now</button>`:""}<button class="btn ghost sm" onclick="restartSubmissions()">Restart ${T_PCT}s</button></div></div>
+  <div class="card"><h3>No phones? Type the guesses</h3>
+    <div class="row">${G.teams.map((t,i)=>`<div class="field" style="flex:1 1 30%"><label style="color:${tc(i)}">${esc(t.name)}</label><input id="g${i}" type="number" inputmode="numeric" min="0" max="100" placeholder="%" value="${rv.guess[i]!=null?rv.guess[i]:""}" onchange="setGuess(${i},this.value)"></div>`).join("")}</div>
+    ${teamBtns("awardPercentWin","+"+r.pts.win)}${teamBtns("awardPercentSecond","+"+r.pts.second)}</div>`;
+}
+function setGuess(i,v){ rev().guess=rev().guess||[]; rev().guess[i]=v===""?null:Number(v); pushState(); }
+function awardPercentWin(i){ award(i,roundOf(cur()).pts.win,"closest"); pushState(); }
+function awardPercentSecond(i){ award(i,roundOf(cur()).pts.second,"runner-up"); pushState(); }
+
+/* board */
+function hostBoard(r){
+  const rv=rev(); rv.used=rv.used||{};
+  const isAllIn=(c,t)=>r.allIn&&r.allIn[0]===c&&r.allIn[1]===t;
+  const n=Object.keys(rv.used).length, total=r.categories.length*4; const left=timerLeft();
+  if(rv.open){
+    const [c,t]=rv.open.split("-").map(Number); const cat=r.categories[c], tile=cat.tiles[t];
+    if(rv.allin&&rv.allin.stage==="splash") return `<div class="card"><h3>🎰 ALL IN</h3><div class="note">The question shows in a moment. ${esc(G.teams[rv.allin.team].name)}'s entire score is at stake.</div></div>`;
+    const half=Math.round(tile.pts/2);
+    let play;
+    if(rv.allin&&(rv.passTo==null||rv.revealed)){ const a=rv.allin; const nm=esc(G.teams[a.team].name); const at=G.teams[a.team].score;
+      play=rv.revealed?`<div class="note"><b>${a.result==="safe"?nm+" answered right and keeps the points.":nm+" lost "+a.amt+"."+(a.winner!=null?" "+esc(G.teams[a.winner].name)+" picked up "+a.half+".":" Nobody picked up the half.")}</b></div>`
+      :`<div class="note"><b>ALL IN.</b> ${nm}'s entire <b>${at}</b> points are on the line. Right: they keep them. Wrong, or the timer runs out: they drop to 0 and the question passes to the other team for ${Math.round(at/2)}.</div><div class="row"><button class="btn good" onclick="allInRight()">✓ Right, keep ${at}</button><button class="btn bad" onclick="allInWrong()">✗ Wrong, lose ${at}</button></div>`; }
+    else if(rv.allin){ const a=rv.allin; const ti=rv.passTo; const more=(rv.tried||[]).length<G.teams.length; play=`<div class="note">${esc(G.teams[a.team].name)} lost ${a.amt}. Passed to <b style="color:${tc(ti)}">${esc(G.teams[ti].name)}</b> for ${a.half}. Wrong or timer out: ${more?"passes on again":"nobody gets it"}.</div><div class="row"><button class="btn good" onclick="allInPassRight(${ti})">✓ ${esc(G.teams[ti].name)} +${a.half}</button><button class="btn bad" onclick="tilePass()">✗ Wrong${more?" → pass":""}</button></div>`; }
+    else if(rv.revealed){ play=`<div class="note"><b>Done.</b> Close the tile to go back to the board.</div>`; }
+    else if(rv.passTo==null){ const ti=rv.turn; play=`<div class="note"><b style="color:${tc(ti)}">${esc(G.teams[ti].name)}</b> are answering. Right: +${tile.pts}. Wrong or timer out: passes over for ${half}.</div><div class="row"><button class="btn good" onclick="tileRight(${ti},${tile.pts})">✓ ${esc(G.teams[ti].name)} +${tile.pts}</button><button class="btn bad" onclick="tilePass()">✗ Wrong → pass</button></div>`; }
+    else { const ti=rv.passTo; const more=(rv.tried||[]).length<G.teams.length; play=`<div class="note">Passed to <b style="color:${tc(ti)}">${esc(G.teams[ti].name)}</b> for ${half}. Wrong or timer out: ${more?"passes on again":"nobody scores"}.</div><div class="row"><button class="btn good" onclick="tileRight(${ti},${half})">✓ ${esc(G.teams[ti].name)} +${half}</button><button class="btn bad" onclick="tilePass()">✗ Wrong${more?" → pass":""}</button></div>`; }
+    return `<div class="card"><div class="eyebrow">${esc(cat.title)} · ${tile.pts} points${!rv.revealed&&left!=null?" · ⏱ "+left+"s":""}</div><div class="note">Category is really about: <b>${esc(cat.meaning)}</b></div><div class="q">${esc(tile.q)}</div>${ansBox(tile.a,rv.revealed)}
+      ${rv.revealed?"":`<button class="btn primary" onclick="rev().revealed=true;rev().deadline=null;G.timer.end=null;pushState()">Reveal answer</button>`}
+      ${play}
+      <button class="btn" onclick="closeTile()">Close tile → back to board</button></div>`;
+  }
+  const tt=(G.turn||0)%G.teams.length;
+  return `<div class="card"><div class="eyebrow">${n} of ${total} tiles played</div><div class="note"><b style="color:${tc(tt)}">${esc(G.teams[tt].name)}</b> picks next. Tap the tile they call: a ${T_TILE}s timer starts for them.</div>
+    <div class="h-tiles" style="--cols:${r.categories.length||1}">${r.categories.map(c=>`<div class="c">${esc(c.title)}</div>`).join("")}${[0,1,2,3].map(t=>r.categories.map((c,ci)=>`<button class="t ${rv.used[ci+"-"+t]?"used":""} ${isAllIn(ci,t)?"allin":""} num" onclick="openTile(${ci},${t})">${c.tiles[t].pts}</button>`).join("")).join("")}</div>
+    <div class="note">Red-bordered tile is the hidden All In (only you can see that).</div>
+    <div class="note">Whose turn (tap to override):</div>${teamBtns("setTurn")}
+    ${n>=total?`<div class="note"><b>Board done.</b> Hit Next for the scores.</div>`:""}</div>
+    <div class="card"><h3>Category cheat sheet</h3><div class="log">${r.categories.map(c=>`<span><b>${esc(c.title)}</b> → ${esc(c.meaning)}</span>`).join("")}</div></div>`;
+}
+function setTurn(i){ G.turn=i; pushState(); }
+function openTile(c,t){ const r=roundOf(cur()), rv=rev(); const tt=(G.turn||0)%G.teams.length; rv.open=c+"-"+t; rv.revealed=false; rv.allin=null; rv.turn=tt; rv.passTo=null; rv.tried=[tt]; rv.deadline=Date.now()+T_TILE*1000; G.timer.dur=T_TILE; G.timer.end=rv.deadline;
+  if(r.allIn&&r.allIn[0]===c&&r.allIn[1]===t){ rv.allin={stage:"splash",team:tt,amt:G.teams[tt].score}; rv.deadline=null; G.timer.end=null; pushState(); setTimeout(()=>{ const v=rev(); if(v.allin&&v.allin.stage==="splash"){ v.allin.stage="play"; v.deadline=Date.now()+T_TILE*1000; G.timer.dur=T_TILE; G.timer.end=v.deadline; pushState(); } },2200); return; }
+  pushState(); }
+function tileRight(i,p){ const rv=rev(); if(rv.revealed) return; award(i,p,"tile"); rv.revealed=true; rv.deadline=null; G.timer.end=null; pushState(); }
+function tilePass(){ const rv=rev(); if(rv.revealed) return; const tried=rv.tried||[rv.turn]; const n=G.teams.length; let next=null; for(let k=1;k<n;k++){ const c=(rv.turn+k)%n; if(!tried.includes(c)){ next=c; break; } } rv.tried=tried; if(next==null){ rv.revealed=true; rv.deadline=null; G.timer.end=null; toast("Nobody scores"); } else { tried.push(next); rv.passTo=next; rv.deadline=Date.now()+T_TILE*1000; G.timer.dur=T_TILE; G.timer.end=rv.deadline; toast("Passed to "+G.teams[next].name); } pushState(); }
+function allInRight(){ const rv=rev(); if(!rv.allin||rv.revealed) return; rv.allin.result="safe"; rv.allin.amt=G.teams[rv.allin.team].score; rv.revealed=true; rv.deadline=null; G.timer.end=null; toast(G.teams[rv.allin.team].name+" keep their points"); pushState(); }
+function allInWrong(){ const rv=rev(); if(!rv.allin||rv.revealed||rv.passTo!=null) return; const a=rv.allin; const amt=G.teams[a.team].score; if(amt>0) award(a.team,-amt,"all in lost"); a.result="lost"; a.amt=amt; a.half=Math.round(amt/2); rv.tried=[a.team]; tilePass(); }
+function allInPassRight(i){ const rv=rev(); if(!rv.allin||rv.revealed) return; const a=rv.allin; if(a.half) award(i,a.half,"all in half"); a.winner=i; rv.revealed=true; rv.deadline=null; G.timer.end=null; pushState(); }
+function closeTile(){ const rv=rev(); rv.used=rv.used||{}; rv.used[rv.open]=true; rv.open=null; rv.revealed=false; rv.allin=null; rv.passTo=null; rv.deadline=null; G.turn=((G.turn||0)+1)%G.teams.length; G.timer.end=null; pushState(); }
+
+/* rank */
+function hostRank(r,sl){
+  const it=r.items[sl.i], rv=rev(), shown=rv.shown||0; const left=timerLeft(); const ph=rv.phase||"open";
+  return `<div class="card"><div class="eyebrow">Rank ${sl.i+1} of ${r.items.length}</div><div class="q">${esc(it.q)}</div>
+    <div class="log" style="font-size:1rem">${it.items.map((x,i)=>`<span><b>${i+1}. ${esc(x)}</b> · ${esc(it.meta[i])}</span>`).join("")}</div>${it.note?`<div class="note">${esc(it.note)}</div>`:""}</div>
+    <div class="card"><h3>${ph==="open"?"⏱ "+(left!=null?left+"s":"")+" · orders open":ph==="closed"?"Orders in · revealing in a moment":"Revealed"}</h3>
+    ${subStatus(rv,s=>s.order&&s.order.length?s.order.map((x,i)=>(i+1)+". "+esc(x)).join(", "):"no order")}
+    <div class="note">Players drag the order on their phones. Closes when both are in or after ${T_RANK}s, reveals 2 seconds later. ${r.pts.slot} per correct slot, +${r.pts.perfect} for a perfect order.</div>
+    <div class="row">${ph==="open"?`<button class="btn" onclick="closeSubmissions()">Close now</button>`:""}${ph!=="done"?`<button class="btn primary" onclick="revealRankAuto()">Reveal now</button>`:""}<button class="btn ghost sm" onclick="restartSubmissions()">Restart ${T_RANK}s</button></div>
+    <div class="row"><button class="btn sm" onclick="rev().shown=Math.min(${it.items.length},(rev().shown||0)+1);pushState()" ${shown>=it.items.length?"disabled":""}>Reveal slot ${Math.min(it.items.length,shown+1)} only</button></div></div>
+    <div class="card"><h3>No phones? Score by hand</h3><div class="note">Tap how many slots each team got right.</div>
+    ${G.teams.map((t,i)=>`<div class="teamrow"><span class="lbl" style="--tc:${tc(i)}">${esc(t.name)}</span><div class="row">${[1,2,3,4,5].map(n=>`<button class="btn sm team ${rv.scored&&rv.scored[i]===n?"fill":""}" style="--tc:${tc(i)}" onclick="rankScore(${i},${n})">${n}</button>`).join("")}</div></div>`).join("")}</div>`;
+}
+function rankScore(i,n){ const r=roundOf(cur()), rv=rev(); rv.scored=rv.scored||{}; if(rv.scored[i]){ toast("Already scored. Use Undo first."); return; } rv.scored[i]=n; award(i,n*r.pts.slot+(n===5?r.pts.perfect:0),n+" slots"); pushState(); }
+
+/* emoji */
+function hostEmoji(r,sl){
+  const it=r.items[sl.i], rv=rev();
+  return `<div class="card"><div class="eyebrow">Picture ${sl.i+1} of ${r.items.length}</div><div class="emoji" style="font-size:2.4rem">${emojiHTML(it.emoji)}</div>${ansBox(it.a,rv.revealed)}${it.note?`<div class="note">${esc(it.note)}</div>`:""}
+    ${rv.revealed?"":`<button class="btn primary" onclick="rev().revealed=true;pushState()">Reveal answer</button>`}</div>
+    ${hostBuzzCard(r)}
+    <div class="card"><h3>No phones? Score by hand</h3><div class="note">+${r.pts.win} right, −${r.pts.win} and locked out when wrong.</div>${teamBtns("emojiWin","+"+r.pts.win)}${teamBtns("emojiMiss","−"+r.pts.win)}</div>`;
+}
+function hostBuzzCard(r){
+  const bz=G.buzz||{}; const linked=srvMode||(relay&&relayState==="on")||!!room;
+  if(G.buzzOn===false) return `<div class="card"><h3>🔔 Buzzers off</h3><div class="row"><button class="btn sm" onclick="G.buzzOn=true;armBuzz();pushState()">Switch on</button></div></div>`;
+  const order=(bz.order||[]).map((x,i)=>`<span>${i+1}. <b style="color:${tc(x.team)}">${esc(G.teams[x.team].name)}</b>${x.name?" · "+esc(x.name):""}${i>0&&bz.first?" (+"+((x.t-bz.first.t)/1000).toFixed(2)+"s)":""}</span>`).join("");
+  const lockedTxt=(bz.locked||[]).map(i=>esc(G.teams[i].name)).join(", ")||"nobody"; const passedTxt=(bz.passed||[]).map(i=>esc(G.teams[i].name)).join(", ");
+  return `<div class="card"><h3>🔔 Buzzers ${bz.armed?(bz.first?"· hit":bz.passOpen?"· buzz or pass":"· armed"):"· off"}</h3>
+    ${!linked?`<div class="note">Players' phones need the Wi-Fi server or relay link; through the Claude link they cannot connect.</div>`:""}
+    ${bz.first?`<div class="a" style="border-color:${tc(bz.first.team)};color:${tc(bz.first.team)};background:transparent">${esc(G.teams[bz.first.team].name)} to answer</div><div class="log">${order}</div>
+      <div class="row"><button class="btn good" onclick="emojiWin(${bz.first.team})">✓ Correct +${r.pts.win}</button><button class="btn bad" onclick="buzzWrong()">✗ Wrong −${r.pts.win}</button></div><div class="note">Wrong: locked out, and the next team that buzzed gets it. If nobody else buzzed, the others can buzz or pass.</div>`:`<div class="note">${bz.armed?"Waiting for a buzz. Locked out: "+lockedTxt+"."+(passedTxt?" Passed: "+passedTxt+".":""):"Not armed on this slide."}</div>`}
+    <div class="row"><button class="btn sm" onclick="buzzReset()">Reset buzzers</button><button class="btn sm ghost" onclick="G.buzzOn=false;armBuzz();pushState()">Switch off</button></div></div>`;
+}
+function emojiWin(i){ const w=roundOf(cur()).pts.win; award(i,w,"emoji"); rev().revealed=true; G.teams.forEach(t=>t.lock=false); if(G.buzz){ G.buzz.armed=false; G.buzz.result={team:i,ok:true,pts:w,handed:!!(G.buzz.first&&G.buzz.first.handed)}; G.buzz.first=null; } pushState(); }
+function emojiMiss(i){ const r=roundOf(cur()); award(i,-r.pts.win,"wrong buzz"); G.teams[i].lock=true; if(G.buzz){ G.buzz.locked=(G.buzz.locked||[]).concat([i]); G.buzz.lastWrong={team:i,pen:r.pts.win}; if(G.buzz.first&&G.buzz.first.team===i) G.buzz.first=null; } pushState(); }
+function lockTeam(i){ G.teams[i].lock=true; pushState(); }
+
+/* who am i */
+function hostWho(r,sl){
+  const it=r.items[sl.i], rv=rev(); const ti=whoTeam(); const t=G.teams[ti];
+  const h=rv.hints||0, used=rv.guesses||0, left=Math.max(0,r.pts.guesses-used), now=h?r.pts.hints[Math.min(h,5)-1]:r.pts.hints[0];
+  if(!h){
+    return `<div class="card"><div class="eyebrow">Who am I? · ${sl.i+1} of ${r.items.length}</div>${ansBox(it.a,false)}<h3 style="color:${tc(ti)}">${esc(t.name)}'s person</h3><div class="note">Only this team plays: ${r.pts.hints.join(" / ")} points by hint, ${r.pts.guesses} guesses, nothing lost on a wrong guess. Tap another team to change whose turn it is.</div>
+      ${teamBtns("setWhoTeam")}
+      <button class="btn primary" onclick="rev().hints=1;pushState()">Show hint 1 (worth ${r.pts.hints[0]})</button></div>`;
+  }
+  return `<div class="card"><div class="eyebrow">Who am I? · hint ${h} of 5 · <span style="color:${tc(ti)}">${esc(t.name)}</span></div>${ansBox(it.a,rv.revealed)}
+    <div class="log" style="font-size:.95rem">${it.hints.map((x,i)=>`<span style="${i<h?"":"opacity:.4"}"><b>${i+1}.</b> ${esc(x)} <span class="num" style="color:var(--accent)">${r.pts.hints[i]}</span></span>`).join("")}</div>
+    <div class="row"><button class="btn primary" onclick="rev().hints=Math.min(5,(rev().hints||0)+1);pushState()" ${h>=5||rv.done?"disabled":""}>Next hint</button><button class="btn" onclick="rev().revealed=true;pushState()" ${rv.revealed?"disabled":""}>Reveal identity</button></div></div>
+    <div class="card"><h3>${esc(t.name)} · guesses ${"●".repeat(left)}${"○".repeat(used)}</h3>
+    ${rv.done?`<div class="note"><b>${rv.done==="ok"?"✓ Got it on hint "+h+", +"+rv.won:"✗ Out of guesses, 0 points"}</b>. Hit Next for the next person.</div>`:`<div class="note">A correct answer right now is worth <b>${now}</b>. ${left} guess${left===1?"":"es"} left.</div>
+    <div class="row"><button class="btn good" onclick="whoRight()">✓ Correct +${now}</button><button class="btn bad" onclick="whoWrong()">✗ Wrong guess</button></div>`}</div>`;
+}
+function setWhoTeam(i){ rev().team=i; pushState(); }
+function whoRight(){ const r=roundOf(cur()), rv=rev(); const h=Math.min(rv.hints||1,5); const won=r.pts.hints[h-1]; award(whoTeam(),won,"who am I"); rv.won=won; rv.done="ok"; rv.revealed=true; pushState(); }
+function whoWrong(){ const r=roundOf(cur()), rv=rev(); rv.guesses=(rv.guesses||0)+1; if(rv.guesses>=r.pts.guesses){ rv.done="x"; rv.revealed=true; toast("Out of guesses"); } else toast((r.pts.guesses-rv.guesses)+" guess"+(r.pts.guesses-rv.guesses===1?"":"es")+" left"); pushState(); }
+
+/* timer */
+let tickT=null, lastBeep=null;
+function toggleTimer(){ if(G.timer.end){ G.timer.end=null; } else { G.timer.end=Date.now()+G.timer.dur*1000; } pushState(); }
+function tick(){
+  const left=timerLeft();
+  document.querySelectorAll(".tnum").forEach(el=>el.textContent=left!=null?left:"");
+  const tv=document.querySelector(".tv-timer"); if(tv){ tv.classList.toggle("on",left!=null); tv.classList.toggle("low",left!=null&&left<=5); const ring=tv.querySelector(".ring"); if(ring) ring.style.setProperty("--p",(left!=null?left/G.timer.dur*100:100)+"%"); }
+  if(left!=null&&left<=3&&left!==lastBeep){ lastBeep=left; sting(left===0?"bad":"tick"); }
+  if(left===0&&mode==="host"){ G.timer.end=null; pushState(); }
+  if(mode==="host") hostAuto();
+  if(mode==="buzz") playerAuto();
+  if(mode==="tv"||mode==="buzz"){ const sl=cur(); if(sl.k==="final"){ const rv=G.rev["s"+G.s]||{}; const k=(rv.at||0)+":"+(drumOn()?"d":"w"); if(k!==drumKey){ drumKey=k; render(); } if(drumOn()&&mode==="tv"&&tvStarted) beep(150+Math.random()*60,.06,"square"); } }
+}
+setInterval(tick,250);
+
+/* sheets */
+function openSheet(n){ uiSheet=n; render(); }
+function closeSheet(){ uiSheet=null; resetArmed=false; render(); }
+let resetArmed=false;
+function renderSheet(){
+  if(uiSheet==="jump") return `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="in"><h3>Jump to</h3><div class="jump">${SLIDES.map((s,i)=>`<button class="${i===G.s?"cur":""}" onclick="closeSheet();go(${i})"><span>${esc(s.label)}</span><small>${i+1}</small></button>`).join("")}</div><button class="btn" onclick="closeSheet()">Close</button></div></div>`;
+  return `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="in"><h3>Adjust scores</h3>
+    ${G.teams.map((t,i)=>`<div class="teamrow"><span class="lbl" style="--tc:${tc(i)}">${esc(t.name)} · <span class="num">${t.score}</span></span><div class="row"><button class="btn sm" onclick="award(${i},-100,'adjust');pushState()">−100</button><button class="btn sm" onclick="award(${i},-50,'adjust');pushState()">−50</button><button class="btn sm" onclick="award(${i},50,'adjust');pushState()">+50</button><button class="btn sm" onclick="award(${i},100,'adjust');pushState()">+100</button></div></div>`).join("")}
+    <h3>Applause bonus</h3><div class="note">For a wrong answer that deserved it anyway. +50.</div>${teamBtns("applause","👏")}
+    ${playersCard(true)}
+    <h3>Locks</h3><div class="row"><button class="btn" onclick="G.teams.forEach(t=>t.lock=false);pushState()">Unlock all teams</button></div>
+    <h3>Timer length</h3><div class="row">${[15,30,45,60].map(n=>`<button class="btn sm ${G.timer.dur===n?"primary":""}" onclick="G.timer.dur=${n};pushState()">${n}s</button>`).join("")}</div>
+    <h3>Mirror mode</h3><div class="note">For a single phone mirrored to the TV: answers are blurred until you tap them or reveal them.</div><button class="btn ${mirror?"primary":""}" onclick="setMirror(${!mirror})">${mirror?"Mirror mode on":"Mirror mode off"}</button>
+    ${relayAvailable()?`<h3>Internet relay</h3><div class="note">${esc(relayState==="on"?"Connected to room "+relayCode:relayMsg||"Not connected. Type the code shown on the TV.")}</div><div class="row"><div class="field" style="flex:2"><input id="room2" maxlength="6" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;letter-spacing:.2em" value="${esc(relayCode||savedCode())}"></div><button class="btn primary" style="flex:1" onclick="relayConnect(document.getElementById('room2').value)">Connect</button></div>`:""}
+    <h3>Game</h3><div class="row"><button class="btn" onclick="G.phase='setup';pushState()">Edit teams</button><button class="btn ghost" onclick="location.hash='tv'">Open TV view here</button></div>
+    ${resetArmed?`<div class="row"><button class="btn hot" onclick="resetGame()">Yes, wipe scores and restart</button><button class="btn" onclick="resetArmed=false;render()">Keep playing</button></div>`:`<button class="btn bad" onclick="resetArmed=true;render()">Reset game…</button>`}
+    <button class="btn" onclick="closeSheet()">Close</button></div></div>`;
+}
+function applause(i){ award(i,50,"applause"); pushState(); }
+function setMirror(v){ mirror=v; try{ localStorage.setItem("nwtg-mirror",v?"1":"0"); }catch(e){} render(); }
+function resetGame(){ const teams=G.teams.map(t=>({...t,score:0,lock:false})); const v=G.v, pk=G.pack, sel=G.sel, rg=(G.rgen||0)+1; G=defaultState(); G.v=v; G.teams=teams; G.pack=pk||"medium"; G.sel=sel||{}; G.rgen=rg; uiSheet=null; resetArmed=false; pushState(); }
+
+/* question bank builder */
+let builderOpen=false;
+const BANK_SECTIONS=[["percent","Round 1 · Nation Wants to Guess",it=>esc(it.q)],["board","Round 2 · Pick Me Behaviour (categories)",it=>esc(it.title)+" → "+esc(it.meaning)],["rank","Round 3 · Rank Karo",it=>esc(it.q)],["emoji","Round 4 · Emoji Kahani",it=>emojiHTML(it.emoji)+"  "+esc(it.a)],["who","Final · Who Am I?",it=>esc(it.a)]];
+function packCounts(k){ const c=BANK_SECTIONS.map(([t])=>bankPick(t,k).length); const warn=[]; if(c[1]!==5) warn.push(c[1]<5?"board has only "+c[1]+" categories":"board uses the first 5 of "+c[1]+" categories"); c.forEach((n,i)=>{ if(!n) warn.push(BANK_SECTIONS[i][1].split(" · ")[0]+" has no questions and will be skipped"); }); return `<b>${c[0]}</b> percent · <b>${c[1]}</b> board categories · <b>${c[2]}</b> rankings · <b>${c[3]}</b> emoji · <b>${c[4]}</b> people${warn.length?`<br><span style="color:var(--accent)">${esc(warn.join("; "))}.</span>`:""}`; }
+function renderBuilder(){
+  $app.innerHTML=`<div class="host" style="padding-bottom:40px"><div class="h-top"><div class="eyebrow">Question bank</div><h3>Choose questions</h3>
+    <div class="h-status"><span>${Object.keys(LEVELS).map(k=>`<b>${LEVELS[k].label[0]}</b> ${BANK_SECTIONS.map(([t])=>bankPick(t,k).length).join("·")}`).join(" &nbsp; ")}</span><span>%·board·rank·emoji·who</span></div></div>
+    <div class="h-body">
+    <div class="card"><div class="note">Tap <b>E</b>, <b>M</b> or <b>D</b> to put a question in that pack. A question can sit in more than one. The board takes the first five categories ticked for a level. Your choices are saved with the game, so the TV builds the same quiz.</div><div class="row"><button class="btn primary" onclick="builderOpen=false;render()">Done</button><button class="btn ghost" onclick="G.sel={};pushState()">Reset to bank defaults</button></div></div>
+    ${BANK_SECTIONS.map(([t,title,lab])=>`<div class="card"><h3>${esc(title)}</h3>${(BANK[t]||[]).map(it=>`<div class="teamrow"><span class="note" style="white-space:normal;color:var(--fg)">${lab(it)}${it.suggested&&!itemLevels(it).length?` <span style="color:var(--accent);font-size:.8em">· new, suggested ${esc(LEVELS[it.suggested]?LEVELS[it.suggested].label:it.suggested)}</span>`:""}</span><div class="row" style="flex:0 0 auto;flex-wrap:nowrap">${Object.keys(LEVELS).map(k=>`<button class="btn sm ${inLevel(it,k)?"primary":"ghost"}" style="min-width:42px;flex:0 0 auto" onclick="toggleLevel('${it.id}','${k}')">${LEVELS[k].label[0]}</button>`).join("")}</div></div>`).join("")}</div>`).join("")}
+    <div class="card"><button class="btn primary" onclick="builderOpen=false;render()">Done</button></div></div></div>`;
+}
+function toggleLevel(id,k){ const it=Object.values(BANK).flat().find(x=>x.id===id); if(!it) return; let cur=itemLevels(it); cur=cur.includes(k)?cur.filter(x=>x!==k):cur.concat([k]); G.sel=G.sel||{}; const code=Object.keys(LCODE).filter(x=>cur.includes(x)).map(x=>LCODE[x]).join(""); const def=Object.keys(LCODE).filter(x=>(it.levels||[]).includes(x)).map(x=>LCODE[x]).join(""); if(code===def) delete G.sel[id]; else G.sel[id]=code; pushState(); }
+
+function playersCard(inline){ const P=G.players||{}; const rows=G.teams.map((t,i)=>{ const p=P[i]; return `<div class="teamrow"><span class="lbl" style="--tc:${tc(i)}">${esc(t.name)} · <span style="color:var(--muted);font-weight:600">${p?"📱 "+esc(p.name||"device joined"):"no device yet"}</span></span>${p?`<button class="btn sm" onclick="releaseTeam(${i})">Release</button>`:""}</div>`; }).join(""); const body=`<div class="note">One phone per team. Players open the Player device page, pick a team, and the team locks. Release a team if a phone dies.</div>${rows}`; return inline?`<h3>Player devices</h3>${body}`:`<div class="card"><h3>Player devices</h3>${body}</div>`; }
+
+/* setup */
+let setupDraft=null;
+function renderSetup(){
+  if(!setupDraft){ setupDraft=G.teams.map(t=>({name:t.name,color:t.color})); setupDraft.pack=G.pack||"medium"; }
+  $app.innerHTML=`<div class="host setup" style="padding-bottom:40px"><div class="h-top"><div class="eyebrow">Host remote</div><h3>Set up the teams</h3></div>
+  <div class="h-body"><div class="card"><h3>Difficulty</h3><div class="row">${Object.keys(LEVELS).map(k=>`<button class="btn ${setupDraft.pack===k?"primary":""}" onclick="setupDraft.pack='${k}';render()">${esc(LEVELS[k].label)}</button>`).join("")}</div><div class="note">${esc(LEVELS[setupDraft.pack].blurb)}${(G.pack||"medium")!==setupDraft.pack&&(G.log.length||G.s>0)?" <b>Changing difficulty starts a fresh game.</b>":""}</div>
+    <div class="note">${packCounts(setupDraft.pack)}</div><button class="btn" onclick="builderOpen=true;render()">Choose questions…</button></div>
+  <div class="card"><h3>Teams</h3><div class="row"><button class="btn ${setupDraft.length===2?"primary":""}" onclick="setTeamCount(2)">2 teams</button><button class="btn ${setupDraft.length===3?"primary":""}" onclick="setTeamCount(3)">3 teams</button></div></div>
+  <div class="teams">${setupDraft.map((t,i)=>`<div class="card"><div class="field"><label>Team ${i+1} name</label><input id="tn${i}" value="${esc(t.name)}" maxlength="18" onchange="setupDraft[${i}].name=this.value.trim()||'Team ${i+1}'"></div><div class="swatches">${TEAM_COLORS.map((c,ci)=>`<button class="${t.color===ci?"on":""}" style="--c:${c}" onclick="setupDraft[${i}].color=${ci};render()" aria-label="colour ${ci+1}"></button>`).join("")}</div></div>`).join("")}</div>
+  ${playersCard()}
+  <div class="card"><div class="note">Scores carry over if you only renamed a team. Open the TV view on the laptop first; it will say it is waiting for you.</div><button class="btn primary" onclick="startGame()">Start the show</button>${G.log.length||G.s>0?`<button class="btn" onclick="G.phase='play';setupDraft=null;pushState()">Back to the game</button>`:""}</div></div></div>`;
+}
+function setTeamCount(n){ while(setupDraft.length<n) setupDraft.push({name:"Team "+["Pink","Teal","Gold","Purple"][setupDraft.length],color:setupDraft.length}); setupDraft.length=n; render(); }
+function startGame(){ document.querySelectorAll("[id^=tn]").forEach((el,i)=>{ if(setupDraft[i]) setupDraft[i].name=el.value.trim()||("Team "+(i+1)); });
+  const old=G.teams; const changed=(G.pack||"medium")!==setupDraft.pack;
+  G.teams=setupDraft.map((t,i)=>({name:t.name,color:t.color,score:old[i]&&!changed?old[i].score:0,lock:false}));
+  if(changed){ G.pack=setupDraft.pack; G.rev={}; G.s=0; G.turn=0; G.log=[]; }
+  G.phase="play"; setupDraft=null; pushState(); }
+
+/* ===================== boot ===================== */
+function boot(hot){
+  routeMode();
+  if(hot&&hot.G) G=hot.G; else loadLocal();
+  if(window.claude&&window.claude.hot&&window.claude.hot.snapshot) window.claude.hot.snapshot(()=>({G}));
+  window.addEventListener("hashchange",()=>{ routeMode(); uiSheet=null; if(room) room.presence({role:mode}).catch(()=>{}); if(relayAvailable()&&!relay&&mode!=="lobby") relayAuto(); if(relay&&mode==="tv") try{ relay.publish(relayTopic("tv"),peerId); }catch(e){} render(); });
+  render();
+  connectCaps();
+  srvConnect();
+}
+if(window.claude&&window.claude.hot&&window.claude.hot.ready) window.claude.hot.ready(boot); else boot((window.claude&&window.claude.hot&&window.claude.hot.data)||{});
+</script>
+
+</body>
+</html>
