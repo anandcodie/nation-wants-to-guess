@@ -2103,7 +2103,7 @@ function updateStatus(){
   const el=document.getElementById("status"); if(!el) return;
   const relayOn=relayState==="on"; if(relayCode&&!srvMode&&!room) peersTV=(Date.now()-relayTvSeen<30000)?1:0;
   const tv=peersTV>0; const live=!!room||srvMode||relayOn;
-  const dbTxt=srvMode?(dbState==="error"?"server lost":"via Wi-Fi server"):relayOn?"relay "+relayCode:relayState==="connecting"?"relay connecting…":relayState==="error"?"relay failed":dbState==="synced"?"saved":dbState==="connecting"?"connecting…":dbState==="error"?"sync error":"local only";
+  const dbTxt=srvMode?(dbState==="error"?"server lost":"via Wi-Fi server"):relayOn?"via internet":relayState==="connecting"?"relay connecting…":relayState==="error"?"relay failed":dbState==="synced"?"saved":dbState==="connecting"?"connecting…":dbState==="error"?"sync error":"local only";
   el.innerHTML=`<span class="dot ${tv?"on":live?"warn":""}"></span>${tv?"TV connected":live?"TV not open yet":"no live link"} · ${dbTxt}${mirror?" · mirror":""}`;
 }
 function ansBox(a,shown){ return `<div class="a ${mirror&&!shown?"hid":""}" ${mirror&&!shown?'onclick="this.classList.toggle(\'hid\')"':""}>${esc(a)}</div>`; }
