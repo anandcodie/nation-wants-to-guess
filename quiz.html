@@ -147,7 +147,9 @@ h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.05;margin:0;te
 .qr-row{display:flex;gap:3vw;justify-content:center;align-items:flex-start;flex-wrap:wrap}
 .qr-card{display:flex;flex-direction:column;align-items:center;gap:.8vh}
 .qr-box{width:clamp(130px,22vh,300px);aspect-ratio:1;background:#fff;border-radius:14px;padding:6px;box-shadow:0 10px 40px rgba(0,0,0,.45)}
-.qr-box svg{width:100%;height:100%;display:block}
+.qr-box{position:relative}.qr-box svg{width:100%;height:100%;display:block}
+.qr-card.joined .qr-box svg{opacity:.18}.qr-tick{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(4rem,12vh,9rem);font-weight:800;color:#1b9e4b;animation:pop .5s both}
+.qr-url.ok{color:#5ad67d;font-weight:700}
 .qr-wait{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;font-size:1rem;text-align:center;padding:8px}
 .qr-label{font-weight:700;font-size:clamp(1rem,1.8vw,1.5rem)}.qr-label b{color:var(--accent);letter-spacing:.15em}
 .qr-url{color:var(--muted);font-size:clamp(.8rem,1.3vw,1.1rem)}
@@ -1723,7 +1725,7 @@ function wifiEsc(v){ return String(v).replace(/([\\;,":])/g,"\\$1"); }
 function wifiString(w){ return w.pass?`WIFI:T:WPA;S:${wifiEsc(w.ssid)};P:${wifiEsc(w.pass)};;`:`WIFI:T:nopass;S:${wifiEsc(w.ssid)};;`; }
 function tvJoin(){
   if(!playerLink(0)) return "";
-  const cards=G.teams.map((t,i)=>{ const svg=qrSvg(playerLink(i)); return `<div class="qr-card"><div class="qr-box" style="box-shadow:0 0 0 4px ${tc(i)},0 10px 40px rgba(0,0,0,.45)">${svg||`<div class="qr-wait">${qrLib==="fail"?"QR needs internet on this laptop":"…"}</div>`}</div><div class="qr-label" style="color:${tc(i)}">${esc(t.name)}</div><div class="qr-url">Scan to join as this team</div></div>`; });
+  const cards=G.teams.map((t,i)=>{ const svg=qrSvg(playerLink(i)), inn=teamJoined(i); return `<div class="qr-card ${inn?"joined":""}"><div class="qr-box" style="box-shadow:0 0 0 4px ${tc(i)},0 10px 40px rgba(0,0,0,.45)">${svg||`<div class="qr-wait">${qrLib==="fail"?"QR needs internet on this laptop":"…"}</div>`}${inn?`<div class="qr-tick">✓</div>`:""}</div><div class="qr-label" style="color:${tc(i)}">${esc(t.name)}</div><div class="qr-url ${inn?"ok":""}">${inn?"Joined, ready to play":"Scan to join as this team"}</div></div>`; });
   const w=wifiCfg();
   if(w&&w.ssid){ const svg=qrSvg(wifiString(w)); cards.splice(Math.ceil(cards.length/2),0,`<div class="qr-card"><div class="qr-box">${svg||`<div class="qr-wait">…</div>`}</div><div class="qr-label">Wi-Fi</div><div class="qr-url">${esc(w.ssid)}</div></div>`); }
   const plain=playerLink().replace(/^https?:\/\//,"").replace(/\?.*$/,"");
@@ -1803,6 +1805,7 @@ function buzzReset(){ armBuzz(); G.teams.forEach(t=>t.lock=false); pushState(); 
 let myTeam=null, myName="", myGen=0, lastHb=0, autoPickGen=-1; try{ const j=JSON.parse(sessionStorage.getItem("nwtg-player")||"null"); if(j){ myTeam=j.team; myName=""; myGen=j.gen||0; } }catch(e){}
 function savePlayer(){ try{ sessionStorage.setItem("nwtg-player",JSON.stringify({team:myTeam,gen:myGen})); }catch(e){} }
 const SEAT_STALE=60000;   // a seat whose phone has been silent this long can be taken by another device
+function teamJoined(i){ const p=(G.players||{})[i]; return !!(p&&Date.now()-(p.seen||0)<SEAT_STALE); }
 function joinedTeam(){ const p=G.players||{}; for(const k in p){ if(p[k]&&p[k].peer===peerId) return Number(k); } return null; }
 function handleJoin(m){ if(typeof m.team!=="number"||!G.teams[m.team]) return; const p=G.players||{}; const curr=p[m.team]; if(curr&&curr.peer!==m.peer&&Date.now()-(curr.seen||0)<SEAT_STALE) return; for(const k in p){ if(p[k]&&p[k].peer===m.peer&&Number(k)!==m.team) delete p[k]; } p[m.team]={peer:String(m.peer||""),name:String(m.name||"").slice(0,24),seen:Date.now()}; G.players=p; pushState(); }
 function handleLeave(m){ const p=G.players||{}; let ch=false; for(const k in p){ if(p[k]&&p[k].peer===m.peer){ delete p[k]; ch=true; } } if(ch){ G.players=p; pushState(); } }
@@ -1831,7 +1834,9 @@ function revealRankAuto(){ const r=roundOf(cur()), it=r.items[cur().i], rv=rev()
   G.teams.forEach((t,i)=>{ const o=(rv.sub[i]&&rv.sub[i].order)||[]; let n=0; it.items.forEach((x,k)=>{ if(o[k]===x) n++; }); const pts=n*r.pts.slot+(n===it.items.length?r.pts.perfect:0); rv.correct[i]=n; rv.won[i]=pts; if(pts) award(i,pts,"slots"); });
   pushState(); }
 let autoBusy=false;
-function hostAuto(){ if(mode!=="host"||G.phase!=="play"||autoBusy) return; autoBusy=true; try{ const sl=cur(), r=roundOf(sl); if(!r) return; const rv=G.rev["s"+G.s]; if(!rv) return; const now=Date.now();
+function hostAuto(){ if(mode!=="host"||G.phase!=="play"||autoBusy) return; autoBusy=true; try{ const sl=cur(), r=roundOf(sl);
+    if(sl.k==="title"){ const rv=rev(); if(!rv.autoNext&&G.teams.length&&G.teams.every((t,i)=>teamJoined(i))){ if(!rv.allAt){ rv.allAt=Date.now(); pushState(); } else if(Date.now()-rv.allAt>T_REVEAL){ rv.autoNext=true; toast(G.teams.length>2?"All teams are in":"Both teams are in"); go(1); } } else if(rv.allAt&&!rv.autoNext) { rv.allAt=null; } return; }
+    if(!r) return; const rv=G.rev["s"+G.s]; if(!rv) return; const now=Date.now();
   if(sl.k==="q"&&(r.type==="percent"||r.type==="rank")){
     if(rv.phase==="open"&&rv.deadline&&now>rv.deadline+1500) closeSubmissions();
     else if(rv.phase==="closed"&&rv.revealAt&&now>=rv.revealAt){ if(r.type==="percent") revealPercentAuto(); else revealRankAuto(); }
