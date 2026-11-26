@@ -1539,7 +1539,7 @@ const QUESTION_BANK = {
 const SHOW = { title: "Nation Wants to Guess", subtitle: "SNN Edition" };
 const ROUNDS = [
   { id: "r1", type: "percent", tag: "Round 1", name: "Nation Wants to Guess",
-    rule: "A number question. Every team guesses a percentage. Closest guess wins, runner-up gets half.", pts: { win: 100, second: 50 } },
+    rule: "A number question. Every team guesses a percentage. Closest guess takes the points; nobody else scores.", pts: { win: 100, second: 0 } },
   { id: "r2", type: "board", tag: "Round 2", name: "Pick Me Behaviour",
     rule: "Teams take turns picking a tile. The category names are lying to you. Right answer, full points. Wrong answer, it passes to the other team for half. No minus points. One tile is All In." },
   { id: "r3", type: "rank", tag: "Round 3", name: "Rank Karo",
@@ -1838,7 +1838,7 @@ function closeSubmissions(){ const rv=rev(); if(rv.phase!=="open") return; rv.ph
 function restartSubmissions(){ const r=roundOf(cur()), rv=rev(); const d=r.type==="percent"?T_PCT:T_RANK; rv.phase="open"; rv.sub={}; rv.deadline=Date.now()+d*1000; rv.revealed=false; rv.shown=0; rv.won={}; rv.correct={}; rv.guess=[]; G.timer.dur=d; G.timer.end=rv.deadline; pushState(); }
 function revealPercentAuto(){ const r=roundOf(cur()), it=r.items[cur().i], rv=rev(); if(rv.revealed) return; rv.sub=rv.sub||{}; rv.guess=rv.guess||[]; G.teams.forEach((t,i)=>{ if(rv.sub[i]&&rv.sub[i].v!=null) rv.guess[i]=rv.sub[i].v; }); rv.revealed=true; rv.phase="done"; rv.won={}; G.timer.end=null;
   const g=G.teams.map((t,i)=>({i,g:rv.guess[i]!=null?Number(rv.guess[i]):null})).filter(x=>x.g!=null&&!isNaN(x.g));
-  if(g.length){ g.sort((a,b)=>Math.abs(a.g-it.a)-Math.abs(b.g-it.a)); const best=Math.abs(g[0].g-it.a); const winners=g.filter(x=>Math.abs(x.g-it.a)===best); winners.forEach(w=>{ award(w.i,r.pts.win,"closest"); rv.won[w.i]=r.pts.win; }); const rest=g.filter(x=>Math.abs(x.g-it.a)!==best); if(rest.length){ const b2=Math.abs(rest[0].g-it.a); rest.filter(x=>Math.abs(x.g-it.a)===b2).forEach(w=>{ award(w.i,r.pts.second,"runner-up"); rv.won[w.i]=r.pts.second; }); } }
+  if(g.length){ g.sort((a,b)=>Math.abs(a.g-it.a)-Math.abs(b.g-it.a)); const best=Math.abs(g[0].g-it.a); const winners=g.filter(x=>Math.abs(x.g-it.a)===best); winners.forEach(w=>{ award(w.i,r.pts.win,"closest"); rv.won[w.i]=r.pts.win; }); }
   pushState(); }
 function revealRankAuto(){ const r=roundOf(cur()), it=r.items[cur().i], rv=rev(); if(rv.revealed) return; rv.sub=rv.sub||{}; rv.shown=it.items.length; rv.revealed=true; rv.phase="done"; rv.won={}; rv.correct={}; G.timer.end=null;
   G.teams.forEach((t,i)=>{ const o=(rv.sub[i]&&rv.sub[i].order)||[]; let n=0; it.items.forEach((x,k)=>{ if(o[k]===x) n++; }); const pts=n*r.pts.slot+(n===it.items.length?r.pts.perfect:0); rv.correct[i]=n; rv.won[i]=pts; if(pts) award(i,pts,"slots"); });
@@ -1874,7 +1874,7 @@ function leaveTeam(){ sendMsg("leave",{}); myTeam=null; savePlayer(); render(); 
 function plLeaderboard(){ return `<div class="log" style="font-size:1.05rem;width:100%;max-width:360px">${leaderboard().map((t,p)=>`<span style="display:flex;justify-content:space-between"><b style="color:${tc(t.i)}">${p+1}. ${esc(t.name)}</b><b class="num">${t.score}</b></span>`).join("")}</div>`; }
 function plFinal(){ if(drumOn()) return `<div class="pl-big drumroll">🥁</div><div class="bp-status">And the winner is…</div>`; const lb=leaderboard(); const w=lb[0]; const tie=lb.length>1&&lb[1].score===w.score; const me=G.teams[myTeam]; const mine=w.i===myTeam; return `<div class="pl-big">${tie?"🤝":mine?"🏆":"💐"}</div><h2 class="pl-h">${tie?"It's a tie!":mine?"Congratulations, "+esc(me.name)+"!":"Better luck next time"}</h2><div class="note">${tie?"Shared glory tonight.":mine?"You won the night with "+me.score+" points.":esc(w.name)+" took it with "+w.score+". You finished on "+me.score+"."}</div>${plLeaderboard()}`; }
 function plPercent(r,sl,rv){ const it=r.items[sl.i]; const sub=rv.sub&&rv.sub[myTeam]; const left=timerLeft();
-  if(rv.phase==="done"||rv.revealed){ const won=(rv.won||{})[myTeam]||0; const mine=sub&&sub.v!=null?sub.v+"%":"no answer"; return `<div class="eyebrow">The answer</div><div class="pl-big num">${it.a}%</div><div class="note">You said <b>${esc(mine)}</b></div><div class="pl-won ${won?"":"zero"}">${won?"+"+won+(won===r.pts.win?" · Closest!":" · Runner-up"):"No points this time"}</div>`; }
+  if(rv.phase==="done"||rv.revealed){ const won=(rv.won||{})[myTeam]||0; const mine=sub&&sub.v!=null?sub.v+"%":"no answer"; return `<div class="eyebrow">The answer</div><div class="pl-big num">${it.a}%</div><div class="note">You said <b>${esc(mine)}</b></div><div class="pl-won ${won?"":"zero"}">${won?"+"+won+" · Closest!":"No points this time"}</div>`; }
   if(rv.phase==="closed") return `<div class="pl-big">🔒</div><div class="bp-status">Answers are in. Reveal on the TV in a moment…</div>`;
   if(sub||sentFor===G.s) return `<div class="pl-big">✅</div><div class="bp-status">Submitted${sub&&sub.v!=null?": "+sub.v+"%":""}. Waiting for the other team…</div>`;
   if(pctDraftSlide!==G.s){ pctDraft=""; pctDraftSlide=G.s; }
@@ -1946,7 +1946,7 @@ function timerLeft(){ if(!G.timer.end) return null; return Math.max(0,Math.ceil(
 
 /* ===================== audio ===================== */
 let actx=null;
-function beep(freq,dur,type){ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(); o.type=type||"sine"; o.frequency.value=freq; g.gain.value=.12; o.connect(g); g.connect(actx.destination); o.start(); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+dur); o.stop(actx.currentTime+dur);}catch(e){} }
+function beep(freq,dur,type){ return; /* sounds switched off: TV browsers made a mess of them */ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(); o.type=type||"sine"; o.frequency.value=freq; g.gain.value=.12; o.connect(g); g.connect(actx.destination); o.start(); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+dur); o.stop(actx.currentTime+dur);}catch(e){} }
 function sting(kind){ if(mode!=="tv"||!tvStarted) return; if(kind==="reveal"){beep(660,.15);setTimeout(()=>beep(990,.3),120);} else if(kind==="good"){beep(523,.12);setTimeout(()=>beep(784,.12),100);setTimeout(()=>beep(1047,.3),200);} else if(kind==="bad"){beep(220,.4,"sawtooth");} else if(kind==="tick"){beep(880,.08,"square");} else if(kind==="allin"){[0,120,240,360].forEach((d,i)=>setTimeout(()=>beep(440+i*110,.2,"square"),d));} else if(kind==="buzz"){beep(1200,.08,"square");setTimeout(()=>beep(1600,.25,"square"),80);} }
 
 /* ===================== render root ===================== */
@@ -2010,7 +2010,7 @@ function renderTV(){
       if(bz.lastWrong&&bz.armed){ const open=G.teams.map((t,i)=>i).filter(i=>!(bz.locked||[]).includes(i)&&!(bz.passed||[]).includes(i)).map(i=>esc(G.teams[i].name)); return `<div class="buzzbar hit bad wrap" style="--tc:var(--bad)">✗ ${esc(G.teams[bz.lastWrong.team].name)} wrong −${bz.lastWrong.pen}<br>${open.length?open.join(" & ")+", buzz or pass":"waiting…"}</div>`; }
       if(bz.armed) return `<div class="buzzbar armed">🔔 ${bz.passOpen?"Buzz or pass":"Buzzers armed"}</div>`; return ""; })()}
     ${G.overlay==="scores"&&sl.k!=="scores"&&sl.k!=="final"?`<div class="overlay">${tvScores("Scores so far")}</div>`:""}
-    ${tvStarted?"":`<div class="tapstart" onclick="startTV()"><h2>Tap once to start the TV</h2><p>Goes full screen and switches on the sound.</p></div>`}
+    ${tvStarted?"":`<div class="tapstart" onclick="startTV()"><h2>Tap once to start the TV</h2><p>Goes full screen.</p></div>`}
   </div>`;
   bursts.forEach((e,i)=>setTimeout(()=>showBurst(e),i*1300));
   const bzKey=G.buzz&&G.buzz.first?G.buzz.first.peer+":"+G.buzz.gen:""; if(bzKey&&bzKey!==lastBuzzKey&&!(provBuzz&&provBuzz.peer===(G.buzz.first||{}).peer)) sting("buzz"); lastBuzzKey=bzKey;
@@ -2026,7 +2026,7 @@ function startTV(){ tvStarted=true; try{ const el=document.documentElement; (el.
 const RULES=["There are 5 rounds. Your team's score is on your device at all times.","You answer from your device too: type, drag, and buzz.","Some rounds take points away for a wrong answer, so guess with care.","Every question has a timer, on the TV and on your device. When it runs out, your chance ends.","The host has the final say. Always."];
 function tvRules(){ return `<div class="stage tv-rules"><div class="rn" style="color:var(--hot);letter-spacing:.2em;text-transform:uppercase;font-weight:700;font-size:clamp(1rem,2vw,1.6rem)">Before we begin</div><h2 style="font-size:clamp(2rem,5.5vw,5.5rem);color:var(--accent)">Ground rules</h2><ol class="rules">${RULES.map((x,i)=>`<li style="animation-delay:${(i*.18).toFixed(2)}s"><span class="i num">${i+1}</span><span>${esc(x)}</span></li>`).join("")}</ol><div class="wish">Wish you all the best!</div></div>`; }
 function tvIntro(r){
-  const pts=r.type==="percent"?[`Closest <b>${r.pts.win}</b>`,`Runner-up <b>${r.pts.second}</b>`]:r.type==="board"?["Your pick <b>full points</b>","Passed over <b>half</b>","One tile is <b>All In</b>"]:r.type==="rank"?[`Each correct slot <b>${r.pts.slot}</b>`,`Perfect order <b>+${r.pts.perfect}</b>`]:r.type==="emoji"?[`Right <b>+${r.pts.win}</b>`,`Wrong <b>−${r.pts.win}</b>`,"Buzz first"]:["One team per person","Hint 1 <b>500</b> … hint 5 <b>100</b>","<b>3</b> guesses","Wrong costs <b>nothing</b>"];
+  const pts=r.type==="percent"?[`Closest <b>${r.pts.win}</b>`,`Others <b>0</b>`]:r.type==="board"?["Your pick <b>full points</b>","Passed over <b>half</b>","One tile is <b>All In</b>"]:r.type==="rank"?[`Each correct slot <b>${r.pts.slot}</b>`,`Perfect order <b>+${r.pts.perfect}</b>`]:r.type==="emoji"?[`Right <b>+${r.pts.win}</b>`,`Wrong <b>−${r.pts.win}</b>`,"Buzz first"]:["One team per person","Hint 1 <b>500</b> … hint 5 <b>100</b>","<b>3</b> guesses","Wrong costs <b>nothing</b>"];
   return `<div class="stage tv-intro"><div class="rn">${esc(r.tag)}</div><h2>${r.name.split(" ").map((w,i)=>`<span class="w" style="animation-delay:${(i*.09).toFixed(2)}s">${esc(w)}</span>`).join(" ")}</h2><div class="rule">${esc(r.rule)}</div><div class="pts">${pts.map(p=>`<span class="pill">${p}</span>`).join("")}</div></div>`;
 }
 function tvScores(title){
@@ -2137,15 +2137,14 @@ function hostPercent(r,sl){
   return `<div class="card"><div class="eyebrow">Question ${sl.i+1} of ${r.items.length}</div><div class="q">${esc(it.q)}</div>${ansBox(it.a+"%",rv.revealed)}${it.note?`<div class="note">${esc(it.note)}</div>`:""}</div>
   <div class="card"><h3>${ph==="open"?"⏱ "+(left!=null?left+"s":"")+" · answers open":ph==="closed"?"Answers in · revealing in a moment":"Revealed"}</h3>
     ${subStatus(rv,s=>s.v!=null?s.v+"%":"no answer")}
-    <div class="note">Players type on their phones. Closes when both are in or after ${T_PCT}s, then reveals 2 seconds later. Closest ${r.pts.win}, runner-up ${r.pts.second}.</div>
+    <div class="note">Players type on their phones. Closes when both are in or after ${T_PCT}s, then reveals 2 seconds later. Closest team gets ${r.pts.win}, the other nothing.</div>
     <div class="row">${ph==="open"?`<button class="btn" onclick="closeSubmissions()">Close now</button>`:""}${ph!=="done"?`<button class="btn primary" onclick="revealPercentAuto()">Reveal now</button>`:""}<button class="btn ghost sm" onclick="restartSubmissions()">Restart ${T_PCT}s</button></div></div>
   <div class="card"><h3>No phones? Type the guesses</h3>
     <div class="row">${G.teams.map((t,i)=>`<div class="field" style="flex:1 1 30%"><label style="color:${tc(i)}">${esc(t.name)}</label><input id="g${i}" type="number" inputmode="numeric" min="0" max="100" placeholder="%" value="${rv.guess[i]!=null?rv.guess[i]:""}" onchange="setGuess(${i},this.value)"></div>`).join("")}</div>
-    ${teamBtns("awardPercentWin","+"+r.pts.win)}${teamBtns("awardPercentSecond","+"+r.pts.second)}</div>`;
+    ${teamBtns("awardPercentWin","+"+r.pts.win)}</div>`;
 }
 function setGuess(i,v){ rev().guess=rev().guess||[]; rev().guess[i]=v===""?null:Number(v); pushState(); }
 function awardPercentWin(i){ award(i,roundOf(cur()).pts.win,"closest"); pushState(); }
-function awardPercentSecond(i){ award(i,roundOf(cur()).pts.second,"runner-up"); pushState(); }
 
 /* board */
 function hostBoard(r){
