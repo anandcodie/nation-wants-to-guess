@@ -224,6 +224,7 @@ h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.05;margin:0;te
 .bp-btn.queue{opacity:.75;background:var(--panel2);color:var(--fg);box-shadow:0 10px 0 var(--line)}
 .sub-pills{display:flex;gap:1vw;flex-wrap:wrap;justify-content:center}
 .flag{height:1em;width:1.45em;vertical-align:-.12em;border-radius:.08em;display:inline-block;box-shadow:0 0 0 .02em rgba(255,255,255,.3)}
+img.twe{height:1em;width:1em;vertical-align:-.12em;display:inline-block;margin:0 .03em}
 
 /* who am i */
 .hints{display:grid;gap:1.2vh;width:min(100%,1100px)}
@@ -1771,7 +1772,16 @@ const FLAGS={
   CH:'<rect width="3" height="2" fill="#d52b1e"/><rect x="1.3" y=".45" width=".4" height="1.1" fill="#fff"/><rect x=".95" y=".8" width="1.1" height=".4" fill="#fff"/>'
 };
 function graphemes(str){ try{ if(typeof Intl!=="undefined"&&Intl.Segmenter) return [...new Intl.Segmenter().segment(str)].map(x=>x.segment); }catch(e){} return Array.from(str); }
-function emojiHTML(str){ return esc(str).replace(/\uD83C[\uDDE6-\uDDFF]\uD83C[\uDDE6-\uDDFF]/g,m=>{ const cc=String.fromCodePoint(m.codePointAt(0)-0x1F1E6+65,m.codePointAt(2)-0x1F1E6+65); const f=FLAGS[cc]; return f?`<svg class="flag" viewBox="0 0 3 2" role="img" aria-label="${cc} flag">${f}</svg>`:m; }); }
+/* Emoji clues are drawn as images (Twemoji), because TV browsers often lack a colour emoji font. Text emoji remain the fallback. */
+const TWE_OPTS={folder:"svg",ext:".svg",base:"https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/",className:"twe"};
+let tweState="";
+function loadTwemoji(){ if(window.twemoji||tweState) return; tweState="loading"; const el=document.createElement("script"); el.src="https://cdn.jsdelivr.net/npm/@twemoji/api@15.1.0/dist/twemoji.min.js"; el.onload=()=>{ tweState="ok"; preloadEmoji(); render(); }; el.onerror=()=>{ tweState="fail"; }; document.head.appendChild(el); }
+function preloadEmoji(){ if(mode!=="tv"||!window.twemoji) return; try{ const all=ROUNDS.filter(r=>r.type==="emoji").flatMap(r=>r.items.map(it=>it.emoji)).join(" "); const html=twemoji.parse(esc(all),TWE_OPTS); (html.match(/src="[^"]+"/g)||[]).forEach(m=>{ const im=new Image(); im.src=m.slice(5,-1); }); }catch(e){} }
+function emojiSlide(str){
+  if(window.twemoji){ let i=0; return twemoji.parse(esc(str),TWE_OPTS).replace(/<img [^>]*>/g,m=>`<span class="g" style="animation-delay:${(i++*.14).toFixed(2)}s">${m}</span>`); }
+  return graphemes(str).map((g,i)=>`<span class="g" style="animation-delay:${(i*.14).toFixed(2)}s">${emojiHTML(g)}</span>`).join("");
+}
+function emojiHTML(str){ if(window.twemoji) return twemoji.parse(esc(str),TWE_OPTS); return esc(str).replace(/\uD83C[\uDDE6-\uDDFF]\uD83C[\uDDE6-\uDDFF]/g,m=>{ const cc=String.fromCodePoint(m.codePointAt(0)-0x1F1E6+65,m.codePointAt(2)-0x1F1E6+65); const f=FLAGS[cc]; return f?`<svg class="flag" viewBox="0 0 3 2" role="img" aria-label="${cc} flag">${f}</svg>`:m; }); }
 const cur=()=>{ ensurePack(); return SLIDES[Math.min(G.s,SLIDES.length-1)]; };
 const roundOf=sl=>sl.r!=null?PACK.rounds[sl.r]:null;
 const tc=i=>TEAM_COLORS[G.teams[i].color%TEAM_COLORS.length];
@@ -2064,7 +2074,7 @@ function tvRank(r,sl){
 }
 function tvEmoji(r,sl){
   const it=r.items[sl.i], rv=rev();
-  return `<div class="stage"><div class="eyebrow">Picture ${sl.i+1} of ${r.items.length}</div><div class="emoji">${graphemes(it.emoji).map((g,i)=>`<span class="g" style="animation-delay:${(i*.14).toFixed(2)}s">${emojiHTML(g)}</span>`).join("")}</div>${rv.revealed?`<div class="ans">${esc(it.a)}</div>`:`<div class="sub">Name the film</div>`}</div>`;
+  return `<div class="stage"><div class="eyebrow">Picture ${sl.i+1} of ${r.items.length}</div><div class="emoji">${emojiSlide(it.emoji)}</div>${rv.revealed?`<div class="ans">${esc(it.a)}</div>`:`<div class="sub">Name the film</div>`}</div>`;
 }
 function tvWho(r,sl){
   const it=r.items[sl.i], rv=rev(), h=rv.hints||0, ti=whoTeam(), used=rv.guesses||0, left=Math.max(0,r.pts.guesses-used);
@@ -2315,6 +2325,7 @@ function boot(hot){
   if(window.claude&&window.claude.hot&&window.claude.hot.snapshot) window.claude.hot.snapshot(()=>({G}));
   window.addEventListener("hashchange",()=>{ routeMode(); uiSheet=null; if(room) room.presence({role:mode}).catch(()=>{}); if(relayAvailable()&&!relay&&mode!=="lobby") relayAuto(); if(relay&&mode==="tv") try{ relay.publish(relayTopic("tv"),peerId); }catch(e){} render(); });
   render();
+  loadTwemoji();
   connectCaps();
   srvConnect();
 }
