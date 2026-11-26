@@ -1800,10 +1800,11 @@ function buzzWrong(){ const r=roundOf(cur()), bz=G.buzz; if(!bz||!bz.first) retu
 function handlePass(m){ const bz=G.buzz; if(!bz||!bz.armed||bz.first||typeof m.team!=="number") return; if(!G.teams[m.team]||(bz.locked||[]).includes(m.team)) return; bz.passed=bz.passed||[]; if(!bz.passed.includes(m.team)) bz.passed.push(m.team); const open=G.teams.map((t,i)=>i).filter(i=>!bz.locked.includes(i)); if(open.every(i=>bz.passed.includes(i))){ bz.armed=false; rev().revealed=true; toast("Everyone passed"); } pushState(); }
 function buzzReset(){ armBuzz(); G.teams.forEach(t=>t.lock=false); pushState(); }
 /* ---- player devices: one per team ---- */
-let myTeam=null, myName="", myGen=0; try{ const j=JSON.parse(localStorage.getItem("nwtg-player")||"null"); if(j){ myTeam=j.team; myName=""; myGen=j.gen||0; } }catch(e){}
-function savePlayer(){ try{ localStorage.setItem("nwtg-player",JSON.stringify({team:myTeam,gen:myGen})); }catch(e){} }
+let myTeam=null, myName="", myGen=0, lastHb=0; try{ const j=JSON.parse(sessionStorage.getItem("nwtg-player")||"null"); if(j){ myTeam=j.team; myName=""; myGen=j.gen||0; } }catch(e){}
+function savePlayer(){ try{ sessionStorage.setItem("nwtg-player",JSON.stringify({team:myTeam,gen:myGen})); }catch(e){} }
+const SEAT_STALE=60000;   // a seat whose phone has been silent this long can be taken by another device
 function joinedTeam(){ const p=G.players||{}; for(const k in p){ if(p[k]&&p[k].peer===peerId) return Number(k); } return null; }
-function handleJoin(m){ if(typeof m.team!=="number"||!G.teams[m.team]) return; const p=G.players||{}; const curr=p[m.team]; if(curr&&curr.peer!==m.peer) return; for(const k in p){ if(p[k]&&p[k].peer===m.peer&&Number(k)!==m.team) delete p[k]; } p[m.team]={peer:String(m.peer||""),name:String(m.name||"").slice(0,24),seen:Date.now()}; G.players=p; pushState(); }
+function handleJoin(m){ if(typeof m.team!=="number"||!G.teams[m.team]) return; const p=G.players||{}; const curr=p[m.team]; if(curr&&curr.peer!==m.peer&&Date.now()-(curr.seen||0)<SEAT_STALE) return; for(const k in p){ if(p[k]&&p[k].peer===m.peer&&Number(k)!==m.team) delete p[k]; } p[m.team]={peer:String(m.peer||""),name:String(m.name||"").slice(0,24),seen:Date.now()}; G.players=p; pushState(); }
 function handleLeave(m){ const p=G.players||{}; let ch=false; for(const k in p){ if(p[k]&&p[k].peer===m.peer){ delete p[k]; ch=true; } } if(ch){ G.players=p; pushState(); } }
 function releaseTeam(i){ const p=G.players||{}; delete p[i]; G.players=p; pushState(); }
 function handleMsg(m){ if(mode!=="host"||!m) return; if(m.type==="buzz") handleBuzz(m); else if(m.type==="join") handleJoin(m); else if(m.type==="leave") handleLeave(m); else if(m.type==="answer") handleAnswer(m); else if(m.type==="pass") handlePass(m); }
@@ -1838,7 +1839,9 @@ function hostAuto(){ if(mode!=="host"||G.phase!=="play"||autoBusy) return; autoB
   if(sl.k==="board"&&rv.open&&!rv.revealed&&rv.deadline&&now>rv.deadline+300){ if(rv.allin&&rv.passTo==null){ if(rv.allin.stage==="play") allInWrong(); } else tilePass(); }
   } finally { autoBusy=false; } }
 function playerAuto(){ if(mode!=="buzz"||myTeam==null) return;
-  if(joinedTeam()!==myTeam){ const p=(G.players||{})[myTeam]; if(!(p&&p.peer!==peerId)&&Date.now()-joinSentAt>3000&&(srvMode||(relay&&relayState==="on"))){ joinSentAt=Date.now(); sendMsg("join",{}); } return; }
+  const live=srvMode||(relay&&relayState==="on")||!!room;
+  if(joinedTeam()!==myTeam){ const p=(G.players||{})[myTeam]; const taken=p&&p.peer!==peerId; if(Date.now()-joinSentAt>(taken?8000:3000)&&live){ joinSentAt=Date.now(); sendMsg("join",{}); } return; }
+  if(live&&Date.now()-lastHb>20000){ lastHb=Date.now(); sendMsg("join",{}); }
   const sl=cur(), r=roundOf(sl); const rv=G.rev["s"+G.s]; if(sl.k==="q"&&r&&(r.type==="percent"||r.type==="rank")&&rv&&rv.phase==="open"&&rv.deadline&&Date.now()>rv.deadline-400&&sentFor!==G.s&&!(rv.sub&&rv.sub[myTeam])) submitAnswer(true); }
 function submitAnswer(auto){ const sl=cur(), r=roundOf(sl); if(!r||sentFor===G.s) return; sentFor=G.s;
   if(r.type==="percent"){ const el=document.getElementById("pct"); if(el) pctDraft=el.value; const n=pctDraft===""?null:Math.max(0,Math.min(100,Number(pctDraft))); sendMsg("answer",{s:G.s,value:(n==null||isNaN(n))?null:n}); }
@@ -1907,7 +1910,7 @@ function renderBuzz(){
   const joined=joinedTeam();
   if(myTeam==null||!G.teams[myTeam]){ const P=G.players||{}; $app.innerHTML=`<div class="lobby"><div><div class="eyebrow">Player device</div><h1 style="font-size:2rem">Pick your team</h1></div><p>One phone per team. Choose carefully: once a team has a device it is locked until the host resets the game.</p><div class="card" style="width:100%;max-width:420px">${G.teams.map((t,i)=>{ const taken=P[i]&&P[i].peer!==peerId; return `<button class="btn team ${taken?"":"fill"}" style="--tc:${tc(i)};min-height:72px;font-size:1.3rem" ${taken?"disabled":""} onclick="pickTeam(${i})">${esc(t.name)}${taken?" · taken":""}</button>`; }).join("")}</div></div>`; return; }
   const t=G.teams[myTeam];
-  if(joined!==myTeam){ const p=(G.players||{})[myTeam]; const taken=p&&p.peer!==peerId; $app.innerHTML=`<div class="lobby"><div class="pl-big">${taken?"🚫":"📡"}</div><h1 style="font-size:1.8rem;color:${tc(myTeam)}">${esc(t.name)}</h1><p>${taken?"This team already has a device. One phone per team. Ask the host to release it.":"Joining… hold on."}</p></div>`; return; }
+  if(joined!==myTeam){ const p=(G.players||{})[myTeam]; const taken=p&&p.peer!==peerId; $app.innerHTML=`<div class="lobby"><div class="pl-big">${taken?"🚫":"📡"}</div><h1 style="font-size:1.8rem;color:${tc(myTeam)}">${esc(t.name)}</h1><p>${taken?"This team already has a device. One phone per team. If that was you on another tab, it frees up within a minute; otherwise ask the host to release it.":"Joining… hold on."}</p></div>`; return; }
   const sl=cur(), r=roundOf(sl), rv=G.rev["s"+G.s]||{};
   const top=`<div class="bp-top"><span style="color:${tc(myTeam)};font-weight:700">${esc(t.name)}</span><span class="num" style="color:var(--muted)">${t.score} pts</span></div>`;
   let body="";
