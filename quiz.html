@@ -146,12 +146,11 @@ h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.05;margin:0;te
 .pill b{color:var(--accent)}
 .qr-row{display:flex;gap:3vw;justify-content:center;align-items:flex-start;flex-wrap:wrap}
 .qr-card{display:flex;flex-direction:column;align-items:center;gap:.8vh}
-.qr-box{width:clamp(140px,24vh,320px);aspect-ratio:1;background:#fff;border-radius:14px;padding:6px;box-shadow:0 10px 40px rgba(0,0,0,.45)}
+.qr-box{width:clamp(130px,22vh,300px);aspect-ratio:1;background:#fff;border-radius:14px;padding:6px;box-shadow:0 10px 40px rgba(0,0,0,.45)}
 .qr-box svg{width:100%;height:100%;display:block}
 .qr-wait{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;font-size:1rem;text-align:center;padding:8px}
 .qr-label{font-weight:700;font-size:clamp(1rem,1.8vw,1.5rem)}.qr-label b{color:var(--accent);letter-spacing:.15em}
 .qr-url{color:var(--muted);font-size:clamp(.8rem,1.3vw,1.1rem)}
-.qr-row.small .qr-box{width:clamp(100px,15vh,190px)}
 
 /* percent round */
 .guesses{display:flex;gap:1.6vw;flex-wrap:wrap;justify-content:center}
@@ -1717,16 +1716,18 @@ function qrSvg(text){
     qrCache[text]=svg; return svg;
   }catch(e){ return ""; }
 }
-function playerLink(){ if(srvMode) return srvAddr?srvAddr+"/#buzz":""; if(relayCode&&relayAvailable()) return PLAYER_URL+"?room="+relayCode; return ""; }
+function playerLink(team){ const t=team==null?"":"team="+team; if(srvMode) return srvAddr?srvAddr+"/"+(t?"?"+t:"")+"#buzz":""; if(relayCode&&relayAvailable()) return PLAYER_URL+"?room="+relayCode+(t?"&"+t:""); return ""; }
 const WIFI={ssid:"To Connect or Not to Conne_Guest",pass:"12345678"};   // guests' network, shown as a QR code on the TV; set ssid to "" to hide it
 function wifiCfg(){ return WIFI.ssid?WIFI:null; }
 function wifiEsc(v){ return String(v).replace(/([\\;,":])/g,"\\$1"); }
 function wifiString(w){ return w.pass?`WIFI:T:WPA;S:${wifiEsc(w.ssid)};P:${wifiEsc(w.pass)};;`:`WIFI:T:nopass;S:${wifiEsc(w.ssid)};;`; }
-function tvJoin(small){
-  const link=playerLink(), w=wifiCfg(), cards=[];
-  if(link){ const svg=qrSvg(link); cards.push(`<div class="qr-card"><div class="qr-box">${svg||`<div class="qr-wait">${qrLib==="fail"?"QR needs internet on this laptop":"…"}</div>`}</div><div class="qr-label">Scan to join</div><div class="qr-url">${esc(link.replace(/^https?:\/\//,"").replace(/\?room=.*$/,""))}</div></div>`); }
-  if(w&&w.ssid){ const svg=qrSvg(wifiString(w)); cards.push(`<div class="qr-card"><div class="qr-box">${svg||`<div class="qr-wait">…</div>`}</div><div class="qr-label">Wi-Fi</div><div class="qr-url">${esc(w.ssid)}</div></div>`); }
-  return cards.length?`<div class="qr-row ${small?"small":""}">${cards.join("")}</div>`:"";
+function tvJoin(){
+  if(!playerLink(0)) return "";
+  const cards=G.teams.map((t,i)=>{ const svg=qrSvg(playerLink(i)); return `<div class="qr-card"><div class="qr-box" style="box-shadow:0 0 0 4px ${tc(i)},0 10px 40px rgba(0,0,0,.45)">${svg||`<div class="qr-wait">${qrLib==="fail"?"QR needs internet on this laptop":"…"}</div>`}</div><div class="qr-label" style="color:${tc(i)}">${esc(t.name)}</div><div class="qr-url">Scan to join as this team</div></div>`; });
+  const w=wifiCfg();
+  if(w&&w.ssid){ const svg=qrSvg(wifiString(w)); cards.splice(Math.ceil(cards.length/2),0,`<div class="qr-card"><div class="qr-box">${svg||`<div class="qr-wait">…</div>`}</div><div class="qr-label">Wi-Fi</div><div class="qr-url">${esc(w.ssid)}</div></div>`); }
+  const plain=playerLink().replace(/^https?:\/\//,"").replace(/\?.*$/,"");
+  return `<div class="qr-row">${cards.join("")}</div><div class="qr-url">No camera? Open ${esc(plain)} and pick your team.</div>`;
 }
 function relayAuto(){ if(!relayAvailable()) return; const q=(new URLSearchParams(location.search).get("room")||"").toUpperCase(); relayConnect(q||DEFAULT_ROOM); }
 
@@ -1799,7 +1800,7 @@ function buzzWrong(){ const r=roundOf(cur()), bz=G.buzz; if(!bz||!bz.first) retu
 function handlePass(m){ const bz=G.buzz; if(!bz||!bz.armed||bz.first||typeof m.team!=="number") return; if(!G.teams[m.team]||(bz.locked||[]).includes(m.team)) return; bz.passed=bz.passed||[]; if(!bz.passed.includes(m.team)) bz.passed.push(m.team); const open=G.teams.map((t,i)=>i).filter(i=>!bz.locked.includes(i)); if(open.every(i=>bz.passed.includes(i))){ bz.armed=false; rev().revealed=true; toast("Everyone passed"); } pushState(); }
 function buzzReset(){ armBuzz(); G.teams.forEach(t=>t.lock=false); pushState(); }
 /* ---- player devices: one per team ---- */
-let myTeam=null, myName="", myGen=0, lastHb=0; try{ const j=JSON.parse(sessionStorage.getItem("nwtg-player")||"null"); if(j){ myTeam=j.team; myName=""; myGen=j.gen||0; } }catch(e){}
+let myTeam=null, myName="", myGen=0, lastHb=0, autoPickGen=-1; try{ const j=JSON.parse(sessionStorage.getItem("nwtg-player")||"null"); if(j){ myTeam=j.team; myName=""; myGen=j.gen||0; } }catch(e){}
 function savePlayer(){ try{ sessionStorage.setItem("nwtg-player",JSON.stringify({team:myTeam,gen:myGen})); }catch(e){} }
 const SEAT_STALE=60000;   // a seat whose phone has been silent this long can be taken by another device
 function joinedTeam(){ const p=G.players||{}; for(const k in p){ if(p[k]&&p[k].peer===peerId) return Number(k); } return null; }
@@ -1907,7 +1908,7 @@ function renderBuzz(){
   if(!linked){ $app.innerHTML=`<div class="lobby"><div><div class="eyebrow">${window.PLAYER_ONLY?esc(PACK.title)+" · "+esc(PACK.subtitle):"Player device"}</div><h1 style="font-size:2rem">${window.PLAYER_ONLY?"Join the quiz":"Not connected"}</h1></div><p>${srvMode===false&&/^https?:/.test(location.protocol)&&!window.PLAYER_ONLY?"Open this page from the address the quiz server printed.":"Scan the QR code on the TV, or tap Connect."}</p>${relayAvailable()?`<div class="card" style="width:100%;max-width:420px"><div class="field"><label>Room code</label><input id="room" maxlength="6" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;letter-spacing:.2em;font-family:var(--display);font-size:1.3rem" value="${esc(relayCode||savedCode())}"></div><button class="btn primary" onclick="relayConnect(document.getElementById('room').value)">Connect</button><div class="note">${esc(relayMsg||"")}</div></div>`:""}${window.PLAYER_ONLY?"":`<button class="btn ghost" onclick="location.hash=''">Back</button>`}</div>`; return; }
   if(myTeam!=null&&myGen!==(G.rgen||0)){ myTeam=null; savePlayer(); }
   const joined=joinedTeam();
-  if(myTeam==null||!G.teams[myTeam]){ const P=G.players||{}; $app.innerHTML=`<div class="lobby"><div><div class="eyebrow">Player device</div><h1 style="font-size:2rem">Pick your team</h1></div><p>One phone per team. Choose carefully: once a team has a device it is locked until the host resets the game.</p><div class="card" style="width:100%;max-width:420px">${G.teams.map((t,i)=>{ const taken=P[i]&&P[i].peer!==peerId&&Date.now()-(P[i].seen||0)<SEAT_STALE; return `<button class="btn team ${taken?"":"fill"}" style="--tc:${tc(i)};min-height:72px;font-size:1.3rem" ${taken?"disabled":""} onclick="pickTeam(${i})">${esc(t.name)}${taken?" · taken":""}</button>`; }).join("")}</div></div>`; return; }
+  if(myTeam==null||!G.teams[myTeam]){ const qt=parseInt(new URLSearchParams(location.search).get("team")||"",10); if(!isNaN(qt)&&G.teams[qt]&&autoPickGen!==(G.rgen||0)){ autoPickGen=G.rgen||0; pickTeam(qt); return; } const P=G.players||{}; $app.innerHTML=`<div class="lobby"><div><div class="eyebrow">Player device</div><h1 style="font-size:2rem">Pick your team</h1></div><p>One phone per team. Choose carefully: once a team has a device it is locked until the host resets the game.</p><div class="card" style="width:100%;max-width:420px">${G.teams.map((t,i)=>{ const taken=P[i]&&P[i].peer!==peerId&&Date.now()-(P[i].seen||0)<SEAT_STALE; return `<button class="btn team ${taken?"":"fill"}" style="--tc:${tc(i)};min-height:72px;font-size:1.3rem" ${taken?"disabled":""} onclick="pickTeam(${i})">${esc(t.name)}${taken?" · taken":""}</button>`; }).join("")}</div></div>`; return; }
   const t=G.teams[myTeam];
   if(joined!==myTeam){ const p=(G.players||{})[myTeam]; const taken=p&&p.peer!==peerId; $app.innerHTML=`<div class="lobby"><div class="pl-big">${taken?"🚫":"📡"}</div><h1 style="font-size:1.8rem;color:${tc(myTeam)}">${esc(t.name)}</h1><p>${taken?"This team already has a device. One phone per team. If that was you on another tab, it frees up within a minute; otherwise ask the host to release it.":"Joining… hold on."}</p></div>`; return; }
   const sl=cur(), r=roundOf(sl), rv=G.rev["s"+G.s]||{};
@@ -1965,8 +1966,8 @@ function renderLobby(){
 function renderTV(){
   const sl=cur(), r=roundOf(sl);
   let main="";
-  if(G.phase==="setup") main=`<div class="stage tv-title"><div class="with">Ruchika &amp; Anand present</div><h1>${esc(PACK.title)}<span>${esc(PACK.subtitle)}</span></h1><div class="waiting">Waiting for the host to start the show…</div>${relayAvailable()&&relayState!=="on"?`<div class="waiting" style="font-size:.8em">${esc(relayMsg||"Connecting…")}</div>`:""}${tvJoin(false)}</div>`;
-  else if(sl.k==="title") main=`<div class="stage tv-title"><div class="with">Ruchika &amp; Anand present</div><h1>${esc(PACK.title)}<span>${esc(PACK.subtitle)}</span></h1><div class="waiting">${G.teams.map((t,i)=>`<span style="color:${tc(i)};font-weight:700">${esc(t.name)}</span>`).join(" &nbsp;vs&nbsp; ")}</div>${tvJoin(true)}</div>`;
+  if(G.phase==="setup") main=`<div class="stage tv-title"><div class="with">Ruchika &amp; Anand present</div><h1>${esc(PACK.title)}<span>${esc(PACK.subtitle)}</span></h1><div class="waiting">Waiting for the host to start the show…</div>${relayAvailable()&&relayState!=="on"?`<div class="waiting" style="font-size:.8em">${esc(relayMsg||"Connecting…")}</div>`:""}${tvJoin()}</div>`;
+  else if(sl.k==="title") main=`<div class="stage tv-title"><div class="with">Ruchika &amp; Anand present</div><h1>${esc(PACK.title)}<span>${esc(PACK.subtitle)}</span></h1><div class="waiting">${G.teams.map((t,i)=>`<span style="color:${tc(i)};font-weight:700">${esc(t.name)}</span>`).join(" &nbsp;vs&nbsp; ")}</div>${tvJoin()}</div>`;
   else if(sl.k==="rules") main=tvRules();
   else if(sl.k==="intro") main=tvIntro(r);
   else if(sl.k==="scores") main=tvScores(r.tag);
