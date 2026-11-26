@@ -152,7 +152,6 @@ h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.05;margin:0;te
 .qr-label{font-weight:700;font-size:clamp(1rem,1.8vw,1.5rem)}.qr-label b{color:var(--accent);letter-spacing:.15em}
 .qr-url{color:var(--muted);font-size:clamp(.8rem,1.3vw,1.1rem)}
 .qr-row.small .qr-box{width:clamp(100px,15vh,190px)}
-.qr-set{font-size:.85rem;opacity:.55;padding:.4em 1em}.qr-set:hover{opacity:1}
 
 /* percent round */
 .guesses{display:flex;gap:1.6vw;flex-wrap:wrap;justify-content:center}
@@ -1664,7 +1663,8 @@ const RELAY_BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8
 let relay=null, relayCode="", relayState="off", relayTvSeen=0, relayHb=null, relayMsg="", relayGotState=false;
 function relayAvailable(){ return !(window.claude&&window.claude.use)&&!srvMode; }
 function makeCode(){ const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789"; let c=""; for(let i=0;i<5;i++) c+=A[Math.floor(Math.random()*A.length)]; return c; }
-function savedCode(){ try{ return localStorage.getItem("nwtg-room")||""; }catch(e){ return ""; } }
+const DEFAULT_ROOM="SNN26";   // every device joins this room unless the address says ?room=OTHER
+function savedCode(){ return DEFAULT_ROOM; }
 function loadMqtt(){ return new Promise((res,rej)=>{ if(window.mqtt) return res(); const el=document.createElement("script"); el.src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"; el.onload=res; el.onerror=()=>rej(new Error("mqtt lib")); document.head.appendChild(el); }); }
 function relayTopic(k){ return "nwtg/v1/"+relayCode+"/"+k; }
 function relaySetStatus(st,msg){ relayState=st; relayMsg=msg||""; if(mode==="lobby"||mode==="tv"||mode==="buzz") render(); else updateStatus(); }
@@ -1672,7 +1672,7 @@ async function relayConnect(code){
   code=(code||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6);
   if(code.length<4){ relaySetStatus("off","Room code needs 4 to 6 letters or digits."); return; }
   if(relay){ try{ relay.end(true); }catch(e){} relay=null; clearInterval(relayHb); }
-  relayCode=code; try{ localStorage.setItem("nwtg-room",code); }catch(e){}
+  relayCode=code;
   relaySetStatus("connecting","Loading…");
   try{ await loadMqtt(); }catch(e){ relaySetStatus("error","Could not load the relay library. Is this device online?"); return; }
   relaySetStatus("connecting","Finding the fastest relay…");
@@ -1719,23 +1719,17 @@ function qrSvg(text){
   }catch(e){ return ""; }
 }
 function playerLink(){ if(srvMode) return srvAddr?srvAddr+"/#buzz":""; if(relayCode&&relayAvailable()) return PLAYER_URL+"?room="+relayCode; return ""; }
-function wifiCfg(){ try{ return JSON.parse(localStorage.getItem("nwtg-wifi")||"null"); }catch(e){ return null; } }
+const WIFI={ssid:"To Connect or Not to Conne_Guest",pass:"12345678"};   // guests' network, shown as a QR code on the TV; set ssid to "" to hide it
+function wifiCfg(){ return WIFI.ssid?WIFI:null; }
 function wifiEsc(v){ return String(v).replace(/([\\;,":])/g,"\\$1"); }
 function wifiString(w){ return w.pass?`WIFI:T:WPA;S:${wifiEsc(w.ssid)};P:${wifiEsc(w.pass)};;`:`WIFI:T:nopass;S:${wifiEsc(w.ssid)};;`; }
-function setWifi(){
-  const w=wifiCfg()||{};
-  const ssid=prompt("Wi-Fi network name for the guests' phones (leave empty to remove the Wi-Fi code):",w.ssid||""); if(ssid===null) return;
-  if(!ssid.trim()){ try{ localStorage.removeItem("nwtg-wifi"); }catch(e){} render(); return; }
-  const pass=prompt("Wi-Fi password (leave empty for an open network):",w.pass||""); if(pass===null) return;
-  try{ localStorage.setItem("nwtg-wifi",JSON.stringify({ssid:ssid.trim(),pass})); }catch(e){} render();
-}
 function tvJoin(small){
   const link=playerLink(), w=wifiCfg(), cards=[];
-  if(link){ const svg=qrSvg(link); cards.push(`<div class="qr-card"><div class="qr-box">${svg||`<div class="qr-wait">${qrLib==="fail"?"QR needs internet on this laptop":"…"}</div>`}</div><div class="qr-label">Scan to join${relayCode&&relayAvailable()?` · room <b>${esc(relayCode)}</b>`:""}</div><div class="qr-url">${esc(link.replace(/^https?:\/\//,"").replace(/\?room=.*$/,""))}</div></div>`); }
+  if(link){ const svg=qrSvg(link); cards.push(`<div class="qr-card"><div class="qr-box">${svg||`<div class="qr-wait">${qrLib==="fail"?"QR needs internet on this laptop":"…"}</div>`}</div><div class="qr-label">Scan to join</div><div class="qr-url">${esc(link.replace(/^https?:\/\//,"").replace(/\?room=.*$/,""))}</div></div>`); }
   if(w&&w.ssid){ const svg=qrSvg(wifiString(w)); cards.push(`<div class="qr-card"><div class="qr-box">${svg||`<div class="qr-wait">…</div>`}</div><div class="qr-label">Wi-Fi</div><div class="qr-url">${esc(w.ssid)}</div></div>`); }
   return cards.length?`<div class="qr-row ${small?"small":""}">${cards.join("")}</div>`:"";
 }
-function relayAuto(){ if(!relayAvailable()) return; const q=(new URLSearchParams(location.search).get("room")||"").toUpperCase(); const saved=savedCode(); if(mode==="tv"){ relayConnect(saved||makeCode()); } else if(mode==="buzz"&&q){ relayConnect(q); } else if(saved&&(mode==="host"||mode==="buzz")){ relayConnect(saved); } }
+function relayAuto(){ if(!relayAvailable()) return; const q=(new URLSearchParams(location.search).get("room")||"").toUpperCase(); relayConnect(q||DEFAULT_ROOM); }
 
 async function connectCaps(){
   if(!window.claude||!window.claude.use) return;
@@ -1908,7 +1902,7 @@ function plEmoji(r,sl,rv){ const bz=G.buzz||{}; const first=bz.first||currentPro
   return `<button class="bp-btn ${cls}" ${cls==="armed"||cls==="queue"?"":"disabled"} onclick="sendBuzz()"><span>${big}</span></button><div class="bp-status">${status}</div>${cls==="armed"&&bz.passOpen?`<button class="btn" style="min-width:140px" onclick="sendPass()">Pass</button>`:""}`; }
 function renderBuzz(){
   const linked=srvMode||(relay&&relayState==="on");
-  if(!linked){ $app.innerHTML=`<div class="lobby"><div><div class="eyebrow">${window.PLAYER_ONLY?esc(PACK.title)+" · "+esc(PACK.subtitle):"Player device"}</div><h1 style="font-size:2rem">${window.PLAYER_ONLY?"Join the quiz":"Not connected"}</h1></div><p>${srvMode===false&&/^https?:/.test(location.protocol)&&!window.PLAYER_ONLY?"Open this page from the address the quiz server printed.":"Type the room code shown on the TV, then tap Connect."}</p>${relayAvailable()?`<div class="card" style="width:100%;max-width:420px"><div class="field"><label>Room code</label><input id="room" maxlength="6" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;letter-spacing:.2em;font-family:var(--display);font-size:1.3rem" value="${esc(relayCode||savedCode())}"></div><button class="btn primary" onclick="relayConnect(document.getElementById('room').value)">Connect</button><div class="note">${esc(relayMsg||"")}</div></div>`:""}${window.PLAYER_ONLY?"":`<button class="btn ghost" onclick="location.hash=''">Back</button>`}</div>`; return; }
+  if(!linked){ $app.innerHTML=`<div class="lobby"><div><div class="eyebrow">${window.PLAYER_ONLY?esc(PACK.title)+" · "+esc(PACK.subtitle):"Player device"}</div><h1 style="font-size:2rem">${window.PLAYER_ONLY?"Join the quiz":"Not connected"}</h1></div><p>${srvMode===false&&/^https?:/.test(location.protocol)&&!window.PLAYER_ONLY?"Open this page from the address the quiz server printed.":"Scan the QR code on the TV, or tap Connect."}</p>${relayAvailable()?`<div class="card" style="width:100%;max-width:420px"><div class="field"><label>Room code</label><input id="room" maxlength="6" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;letter-spacing:.2em;font-family:var(--display);font-size:1.3rem" value="${esc(relayCode||savedCode())}"></div><button class="btn primary" onclick="relayConnect(document.getElementById('room').value)">Connect</button><div class="note">${esc(relayMsg||"")}</div></div>`:""}${window.PLAYER_ONLY?"":`<button class="btn ghost" onclick="location.hash=''">Back</button>`}</div>`; return; }
   if(myTeam!=null&&myGen!==(G.rgen||0)){ myTeam=null; savePlayer(); }
   const joined=joinedTeam();
   if(myTeam==null||!G.teams[myTeam]){ const P=G.players||{}; $app.innerHTML=`<div class="lobby"><div><div class="eyebrow">Player device</div><h1 style="font-size:2rem">Pick your team</h1></div><p>One phone per team. Choose carefully: once a team has a device it is locked until the host resets the game.</p><div class="card" style="width:100%;max-width:420px">${G.teams.map((t,i)=>{ const taken=P[i]&&P[i].peer!==peerId; return `<button class="btn team ${taken?"":"fill"}" style="--tc:${tc(i)};min-height:72px;font-size:1.3rem" ${taken?"disabled":""} onclick="pickTeam(${i})">${esc(t.name)}${taken?" · taken":""}</button>`; }).join("")}</div></div>`; return; }
@@ -1969,7 +1963,7 @@ function renderLobby(){
 function renderTV(){
   const sl=cur(), r=roundOf(sl);
   let main="";
-  if(G.phase==="setup") main=`<div class="stage tv-title"><div class="with">Ruchika &amp; Anand present</div><h1>${esc(PACK.title)}<span>${esc(PACK.subtitle)}</span></h1><div class="waiting">Waiting for the host to start the show…</div>${relayCode&&relayAvailable()?`<div class="pill" style="font-size:clamp(1.2rem,2.6vw,2.2rem);letter-spacing:.2em;border-color:var(--accent)">ROOM <b>${esc(relayCode)}</b></div><div class="waiting" style="font-size:.8em">${relayState==="on"?"Scan the code with your phone, or type the room code on the player page":esc(relayMsg||"Connecting to relay…")}</div>`:""}${tvJoin(false)}${window.claude&&window.claude.use?"":`<button class="btn ghost qr-set" onclick="setWifi()">${wifiCfg()?"Change the Wi-Fi code":"Add a Wi-Fi code for guests"}</button>`}</div>`;
+  if(G.phase==="setup") main=`<div class="stage tv-title"><div class="with">Ruchika &amp; Anand present</div><h1>${esc(PACK.title)}<span>${esc(PACK.subtitle)}</span></h1><div class="waiting">Waiting for the host to start the show…</div>${relayAvailable()&&relayState!=="on"?`<div class="waiting" style="font-size:.8em">${esc(relayMsg||"Connecting…")}</div>`:""}${tvJoin(false)}</div>`;
   else if(sl.k==="title") main=`<div class="stage tv-title"><div class="with">Ruchika &amp; Anand present</div><h1>${esc(PACK.title)}<span>${esc(PACK.subtitle)}</span></h1><div class="waiting">${G.teams.map((t,i)=>`<span style="color:${tc(i)};font-weight:700">${esc(t.name)}</span>`).join(" &nbsp;vs&nbsp; ")}</div>${tvJoin(true)}</div>`;
   else if(sl.k==="rules") main=tvRules();
   else if(sl.k==="intro") main=tvIntro(r);
