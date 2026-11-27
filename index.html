@@ -207,7 +207,9 @@ h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.05;margin:0;te
 .pl-big{font-size:4.5rem;line-height:1}
 .pl-h{font-size:2rem}
 .pl-q{font-size:1.25rem;font-weight:600;text-wrap:balance}
-.pl-timer{font-family:var(--display);font-size:2.6rem;color:var(--accent);line-height:1}
+.pl-timer{font-family:var(--display);font-size:3.6rem;color:var(--accent);line-height:1;transition:color .3s}
+.pl-timer.low{color:#ff5a5a;animation:pulse .5s infinite alternate}@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.08)}}
+.pl-bar{width:100%;max-width:360px;height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;margin:6px 0 10px}.pl-bar i{display:block;height:100%;background:var(--accent);width:var(--p,100%);transition:width 1s linear,background .3s}.pl-timer.low+.pl-bar i{background:#ff5a5a}
 .pl-timer.dim{color:var(--muted)}
 .pl-won{font-family:var(--display);font-size:1.8rem;color:var(--good)}
 .pl-won.zero{color:var(--muted);font-size:1.2rem}
@@ -2330,7 +2332,7 @@ const T_DRUM=5000;
 function go(n){ G.s=Math.max(0,Math.min(SLIDES.length-1,n)); G.timer.end=null; G.overlay=null; G.teams.forEach(t=>t.lock=false); armSlide(); if(cur().k==="final"){ G.phase="end"; rev().at=Date.now(); } pushState(); }
 function drumOn(){ const sl=cur(); if(sl.k!=="final") return false; const rv=G.rev["s"+G.s]||{}; return !!(rv.at&&Date.now()<rv.at+T_DRUM); }
 let drumKey="";
-const T_PCT=45, T_RANK=60, T_TILE=45, T_REVEAL=2000;
+const T_PCT=15, T_RANK=60, T_TILE=45, T_REVEAL=2000;
 function armSlide(){ const sl=cur(), r=roundOf(sl); armBuzz(); if(sl.k==="q"&&r&&(r.type==="percent"||r.type==="rank")){ const rv=rev(); if(!rv.phase){ const d=r.type==="percent"?T_PCT:T_RANK; rv.phase="open"; rv.sub={}; rv.deadline=Date.now()+d*1000; G.timer.dur=d; G.timer.end=rv.deadline; } else if(rv.phase==="open"&&rv.deadline){ G.timer.dur=r.type==="percent"?T_PCT:T_RANK; G.timer.end=rv.deadline; } } }
 /* ---- buzzers: players' phones race to answer; the host decides first by arrival order ---- */
 function buzzSlide(){ const sl=cur(), r=roundOf(sl); return !!(sl.k==="q"&&r&&r.type==="emoji"); }
@@ -2366,9 +2368,10 @@ function sendBuzz(){ if(myTeam==null) return; const bz=G.buzz||{}; if(!bz.armed|
 function sendPass(){ const bz=G.buzz||{}; passSentGen=bz.gen||0; sendMsg("pass",{gen:bz.gen}); render(); }
 /* ---- typed answers (rounds 1 and 3) ---- */
 let pctDraft="", pctDraftSlide=-1, rankDraft=null, rankDraftSlide=-1, sentFor=-1, rkDrag=null;
+function subKey(){ const rv=G.rev["s"+G.s]||{}; return G.s+":"+(rv.sgen||0); }
 function handleAnswer(m){ if(mode!=="host") return; const rv=G.rev["s"+G.s]; if(!rv||rv.phase!=="open"||m.s!==G.s) return; if(typeof m.team!=="number"||!G.teams[m.team]) return; rv.sub=rv.sub||{}; if(rv.sub[m.team]) return; const v=(m.value==null||m.value==="")?null:Number(m.value); rv.sub[m.team]={v:(v==null||isNaN(v))?null:v,order:Array.isArray(m.order)?m.order.map(String):null,t:Date.now()}; if(G.teams.every((t,i)=>rv.sub[i])) closeSubmissions(); else pushState(); }
 function closeSubmissions(){ const rv=rev(); if(rv.phase!=="open") return; rv.phase="closed"; rv.revealAt=Date.now()+T_REVEAL; G.timer.end=null; pushState(); }
-function restartSubmissions(){ const r=roundOf(cur()), rv=rev(); const d=r.type==="percent"?T_PCT:T_RANK; rv.phase="open"; rv.sub={}; rv.deadline=Date.now()+d*1000; rv.revealed=false; rv.shown=0; rv.won={}; rv.correct={}; rv.guess=[]; G.timer.dur=d; G.timer.end=rv.deadline; pushState(); }
+function restartSubmissions(){ const r=roundOf(cur()), rv=rev(); const d=r.type==="percent"?T_PCT:T_RANK; rv.sgen=(rv.sgen||0)+1; rv.phase="open"; rv.sub={}; rv.deadline=Date.now()+d*1000; rv.revealed=false; rv.shown=0; rv.won={}; rv.correct={}; rv.guess=[]; G.timer.dur=d; G.timer.end=rv.deadline; pushState(); }
 function revealPercentAuto(){ const r=roundOf(cur()), it=r.items[cur().i], rv=rev(); if(rv.revealed) return; rv.sub=rv.sub||{}; rv.guess=rv.guess||[]; G.teams.forEach((t,i)=>{ if(rv.sub[i]&&rv.sub[i].v!=null) rv.guess[i]=rv.sub[i].v; }); rv.revealed=true; rv.phase="done"; rv.won={}; G.timer.end=null;
   const g=G.teams.map((t,i)=>({i,g:rv.guess[i]!=null?Number(rv.guess[i]):null})).filter(x=>x.g!=null&&!isNaN(x.g));
   if(g.length){ g.sort((a,b)=>Math.abs(a.g-it.a)-Math.abs(b.g-it.a)); const best=Math.abs(g[0].g-it.a); const winners=g.filter(x=>Math.abs(x.g-it.a)===best); winners.forEach(w=>{ award(w.i,r.pts.win,"closest"); rv.won[w.i]=r.pts.win; }); }
@@ -2390,8 +2393,8 @@ function playerAuto(){ if(mode!=="buzz"||myTeam==null) return;
   const live=srvMode||(relay&&relayState==="on")||!!room;
   if(joinedTeam()!==myTeam){ const p=(G.players||{})[myTeam]; const taken=p&&p.peer!==peerId; if(Date.now()-joinSentAt>(taken?8000:3000)&&live){ joinSentAt=Date.now(); sendMsg("join",{}); } return; }
   if(live&&Date.now()-lastHb>20000){ lastHb=Date.now(); sendMsg("join",{}); }
-  const sl=cur(), r=roundOf(sl); const rv=G.rev["s"+G.s]; if(sl.k==="q"&&r&&(r.type==="percent"||r.type==="rank")&&rv&&rv.phase==="open"&&rv.deadline&&Date.now()>rv.deadline-400&&sentFor!==G.s&&!(rv.sub&&rv.sub[myTeam])) submitAnswer(true); }
-function submitAnswer(auto){ const sl=cur(), r=roundOf(sl); if(!r||sentFor===G.s) return; sentFor=G.s;
+  const sl=cur(), r=roundOf(sl); const rv=G.rev["s"+G.s]; if(sl.k==="q"&&r&&(r.type==="percent"||r.type==="rank")&&rv&&rv.phase==="open"&&rv.deadline&&Date.now()>rv.deadline-400&&sentFor!==subKey()&&!(rv.sub&&rv.sub[myTeam])) submitAnswer(true); }
+function submitAnswer(auto){ const sl=cur(), r=roundOf(sl); if(!r||sentFor===subKey()) return; sentFor=subKey();
   if(r.type==="percent"){ const el=document.getElementById("pct"); if(el) pctDraft=el.value; const n=pctDraft===""?null:Number(pctDraft); sendMsg("answer",{s:G.s,value:(n==null||isNaN(n))?null:n}); }
   else if(r.type==="rank"){ rkCommit(); sendMsg("answer",{s:G.s,order:rankDraft||[]}); }
   try{ navigator.vibrate&&navigator.vibrate(30); }catch(e){} render(); }
@@ -2409,17 +2412,17 @@ function plFinal(){ if(drumOn()) return `<div class="pl-big drumroll">🥁</div>
 function plPercent(r,sl,rv){ const it=r.items[sl.i]; const sub=rv.sub&&rv.sub[myTeam]; const left=timerLeft();
   if(rv.phase==="done"||rv.revealed){ const won=(rv.won||{})[myTeam]||0; const mine=sub&&sub.v!=null?fmtNum(it,sub.v):"no answer"; return `<div class="eyebrow">The answer</div><div class="pl-big num">${fmtNum(it,it.a)}</div><div class="note">You said <b>${esc(mine)}</b></div><div class="pl-won ${won?"":"zero"}">${won?"+"+won+" · Closest!":"No points this time"}</div>`; }
   if(rv.phase==="closed") return `<div class="pl-big">🔒</div><div class="bp-status">Answers are in. Reveal on the TV in a moment…</div>`;
-  if(sub||sentFor===G.s) return `<div class="pl-big">✅</div><div class="bp-status">Submitted${sub&&sub.v!=null?": "+fmtNum(it,sub.v):""}. Waiting for the other team…</div>`;
+  if(sub||sentFor===subKey()) return `<div class="pl-big">✅</div><div class="bp-status">Submitted${sub&&sub.v!=null?": "+fmtNum(it,sub.v):""}. Waiting for the other team…</div>`;
   if(pctDraftSlide!==G.s){ pctDraft=""; pctDraftSlide=G.s; }
-  return `<div class="eyebrow">Question ${sl.i+1}</div><div class="pl-q">${esc(it.q)}</div><div class="pl-timer"><span class="tnum num">${left!=null?left:""}</span>s</div>
+  return `<div class="eyebrow">Question ${sl.i+1}</div><div class="pl-q">${esc(it.q)}</div><div class="pl-timer ${left!=null&&left<=5?"low":""}"><span class="tnum num">${left!=null?left:""}</span>s</div><div class="pl-bar"><i style="--p:${left!=null?Math.round(left/G.timer.dur*100):100}%"></i></div>
     <div class="field"><label>Your guess${it.unit?" (0 to 100)":""}</label><input id="pct" type="number" inputmode="numeric" min="0"${it.unit?' max="100"':""} placeholder="${it.unit?"%":"number"}" value="${esc(pctDraft)}" oninput="pctDraft=this.value" style="font-size:2rem;text-align:center;font-family:var(--display)"></div>
     <button class="btn primary" style="min-height:60px;font-size:1.2rem;width:100%" onclick="submitAnswer()">Submit</button><div class="note">Auto-submits when the timer runs out.</div>`; }
 function plRank(r,sl,rv){ const it=r.items[sl.i]; const sub=rv.sub&&rv.sub[myTeam]; const left=timerLeft();
   if(rv.phase==="done"||rv.revealed){ const won=(rv.won||{})[myTeam]||0, n=(rv.correct||{})[myTeam]||0; const o=(sub&&sub.order)||[]; return `<div class="eyebrow">The real order</div><div class="rk-list">${it.items.map((x,i)=>`<div class="rk-row done ${o[i]===x?"ok":"no"}"><span class="i num">${i+1}</span><span>${esc(x)}</span><span class="m">${o[i]===x?"✓":"✗"}</span></div>`).join("")}</div><div class="pl-won ${won?"":"zero"}">${n}/${it.items.length} right${won?" · +"+won:""}${n===it.items.length?" · Perfect!":""}</div>`; }
   if(rv.phase==="closed") return `<div class="pl-big">🔒</div><div class="bp-status">Orders are in. Reveal on the TV in a moment…</div>`;
-  if(sub||sentFor===G.s) return `<div class="pl-big">✅</div><div class="bp-status">Order submitted. Waiting for the other team…</div>`;
+  if(sub||sentFor===subKey()) return `<div class="pl-big">✅</div><div class="bp-status">Order submitted. Waiting for the other team…</div>`;
   if(rankDraftSlide!==G.s||!rankDraft){ rankDraft=seededShuffle(it.items,G.s+7); rankDraftSlide=G.s; }
-  return `<div class="eyebrow">Rank ${sl.i+1}</div><div class="pl-q">${esc(it.q)}</div><div class="pl-timer"><span class="tnum num">${left!=null?left:""}</span>s</div><div class="note">Drag the rows, or use the arrows. Top is first.</div>
+  return `<div class="eyebrow">Rank ${sl.i+1}</div><div class="pl-q">${esc(it.q)}</div><div class="pl-timer ${left!=null&&left<=5?"low":""}"><span class="tnum num">${left!=null?left:""}</span>s</div><div class="pl-bar"><i style="--p:${left!=null?Math.round(left/G.timer.dur*100):100}%"></i></div><div class="note">Drag the rows, or use the arrows. Top is first.</div>
     <div class="rk-list" id="rk">${rankDraft.map((x,i)=>`<div class="rk-row" data-item="${esc(x)}" onpointerdown="rkDown(event)" onpointermove="rkMove(event)" onpointerup="rkUp(event)" onpointercancel="rkUp(event)"><span class="i num">${i+1}</span><span class="rk-name">${esc(x)}</span><span class="rk-btns"><button class="btn sm" onpointerdown="event.stopPropagation()" onclick="rkMoveBy(${i},-1)">▲</button><button class="btn sm" onpointerdown="event.stopPropagation()" onclick="rkMoveBy(${i},1)">▼</button></span></div>`).join("")}</div>
     <button class="btn primary" style="min-height:60px;font-size:1.2rem;width:100%" onclick="submitAnswer()">Submit order</button><div class="note">Auto-submits when the timer runs out.</div>`; }
 function plWho(r,sl,rv){ const ti=whoTeam(); const mine=ti===myTeam; const h=rv.hints||0, used=rv.guesses||0, left=Math.max(0,r.pts.guesses-used); const now=h?r.pts.hints[Math.min(h,5)-1]:r.pts.hints[0];
@@ -2488,7 +2491,7 @@ let lastSig="";
 function render(){
   ensurePack();
   if(mode==="host"){ const ae=document.activeElement; if(ae&&(ae.tagName==="INPUT")&&$app.contains(ae)){ ae.addEventListener("blur",()=>render(),{once:true}); return; } }
-  if(mode==="buzz"){ const ae=document.activeElement; if(ae&&ae.tagName==="INPUT"&&$app.contains(ae)&&ae.id==="pct"){ const rv=G.rev["s"+G.s]||{}; if(rv.phase==="open"&&sentFor!==G.s){ ae.addEventListener("blur",()=>render(),{once:true}); return; } } }
+  if(mode==="buzz"){ const ae=document.activeElement; if(ae&&ae.tagName==="INPUT"&&$app.contains(ae)&&ae.id==="pct"){ const rv=G.rev["s"+G.s]||{}; if(rv.phase==="open"&&sentFor!==subKey()){ ae.addEventListener("blur",()=>render(),{once:true}); return; } } }
   if(mode==="lobby") renderLobby(); else if(mode==="tv") renderTV(); else if(mode==="buzz") renderBuzz(); else renderHost();
 }
 
@@ -2784,6 +2787,8 @@ function toggleTimer(){ if(G.timer.end){ G.timer.end=null; } else { G.timer.end=
 function tick(){
   const left=timerLeft();
   document.querySelectorAll(".tnum").forEach(el=>el.textContent=left!=null?left:"");
+  document.querySelectorAll(".pl-timer").forEach(el=>el.classList.toggle("low",left!=null&&left<=5));
+  document.querySelectorAll(".pl-bar i").forEach(el=>el.style.setProperty("--p",(left!=null?Math.round(left/G.timer.dur*100):100)+"%"));
   const tv=document.querySelector(".tv-timer"); if(tv){ tv.classList.toggle("on",left!=null); tv.classList.toggle("low",left!=null&&left<=5); const ring=tv.querySelector(".ring"); if(ring) ring.style.setProperty("--p",(left!=null?left/G.timer.dur*100:100)+"%"); }
   if(left!=null&&left<=3&&left!==lastBeep){ lastBeep=left; sting(left===0?"bad":"tick"); }
   if(left===0&&mode==="host"){ G.timer.end=null; pushState(); }
