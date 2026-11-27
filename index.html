@@ -339,9 +339,9 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
      suggested  the level a parked question was written for; purely a hint
               for the chooser, the "levels" tags decide what is played
      note     host-only; shown on the phone, never on the TV
-   percent    q, a (a number, shown as a %), note
+   percent    q, a (the number), unit (optional suffix such as "%"), note
    board      title (the misleading category name), meaning (host-only),
-              tiles (exactly four: pts, q, a), allIn (tile index 0-3 that is
+              tiles (exactly four: pts, q, a, optional note), allIn (tile index 0-3 that is
               the hidden All In wager; at most one category per level)
    rank       q, items (correct order, top first), meta (one label per item)
    emoji      emoji, a, note
@@ -350,130 +350,239 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 const QUESTION_BANK = {
   "percent": [
     {
+      "id": "p-q02",
+      "levels": ["medium"],
+      "q": "How many Oscars did Titanic win?",
+      "a": 11,
+      "note": "It won 11 Academy Awards at the 1998 ceremony."
+    },
+    {
+      "id": "p-q01",
+      "levels": ["medium"],
+      "q": "How many episodes of Friends were made?",
+      "a": 236,
+      "note": "The series ran for 10 seasons, from 1994 to 2004."
+    },
+    {
+      "id": "p-q05",
+      "levels": ["medium"],
+      "q": "How many films have Shah Rukh Khan and Kajol starred in together as lead pair, from Baazigar to Dilwale?",
+      "a": 7,
+      "note": "The seven-film count is based on their films as the lead pair in this period."
+    },
+    {
+      "id": "p-q09",
+      "levels": ["medium"],
+      "q": "How many keys does a full-size piano have?",
+      "a": 88,
+      "note": "A standard full-size piano has 52 white keys and 36 black keys."
+    },
+    {
+      "id": "p-q11",
+      "levels": ["medium"],
+      "q": "How many languages are listed in the language panel on the back of a contemporary Indian banknote?",
+      "a": 15,
+      "note": "The language panel lists 15 languages, in addition to Hindi and English."
+    },
+    {
+      "id": "p-q03",
+      "levels": [],
+      "q": "How many official James Bond films have been made by Eon Productions?",
+      "a": 25,
+      "note": "Eon-produced Bond films, through No Time to Die (2021).",
+      "suggested": "medium"
+    },
+    {
+      "id": "p-q04",
+      "levels": [],
+      "q": "How many members are there in BTS?",
+      "a": 7,
+      "note": "The group consists of RM, Jin, SUGA, j-hope, Jimin, V and Jung Kook.",
+      "suggested": "medium"
+    },
+    {
+      "id": "p-q06",
+      "levels": [],
+      "q": "How old is Kevin in Home Alone?",
+      "a": 8,
+      "note": "Kevin McCallister is eight years old in the first film.",
+      "suggested": "medium"
+    },
+    {
+      "id": "p-q07",
+      "levels": [],
+      "q": "How many squares are there on a standard Scrabble board?",
+      "a": 225,
+      "note": "A standard board is 15 squares by 15 squares.",
+      "suggested": "medium"
+    },
+    {
+      "id": "p-q08",
+      "levels": [],
+      "q": "How many children does Kris Jenner have?",
+      "a": 6,
+      "note": "Kourtney, Kim, Khloé, Rob, Kendall and Kylie.",
+      "suggested": "medium"
+    },
+    {
+      "id": "p-q10",
+      "levels": [],
+      "q": "How many players are there on a Quidditch team on the pitch?",
+      "a": 7,
+      "note": "Three Chasers, two Beaters, one Keeper and one Seeker.",
+      "suggested": "medium"
+    },
+    {
+      "id": "p-q12",
+      "levels": [],
+      "q": "What is the sum of the dots on all six faces of a standard die?",
+      "a": 21,
+      "note": "Opposite faces on a standard die add to seven: 1+2+3+4+5+6 = 21.",
+      "suggested": "medium"
+    },
+    {
       "id": "p-e1",
       "levels": ["easy"],
       "q": "What percentage of the Earth's surface is covered by water?",
       "a": 71,
-      "note": "About 71%. Oceans alone are about 97% of that water."
+      "note": "About 71%. Oceans alone are about 97% of that water.",
+      "unit": "%"
     },
     {
       "id": "p-e2",
-      "levels": ["easy", "medium"],
+      "levels": ["easy"],
       "q": "What percentage of a watermelon is water?",
       "a": 92,
-      "note": "About 92%. Cucumber is around 95%."
+      "note": "About 92%. Cucumber is around 95%.",
+      "unit": "%"
     },
     {
       "id": "p-e3",
       "levels": ["easy"],
       "q": "What percentage of Indians live in Uttar Pradesh?",
       "a": 17,
-      "note": "Census 2011: about 16.5%. If UP were a country it would be the fifth largest."
+      "note": "Census 2011: about 16.5%. If UP were a country it would be the fifth largest.",
+      "unit": "%"
     },
     {
       "id": "p-e4",
       "levels": ["easy"],
       "q": "What percentage of an adult human body is water?",
       "a": 60,
-      "note": "Roughly 60%, a little more in babies."
+      "note": "Roughly 60%, a little more in babies.",
+      "unit": "%"
     },
     {
       "id": "p-e5",
-      "levels": ["easy", "medium"],
+      "levels": ["easy"],
       "q": "What percentage of the world's wild tigers live in India?",
       "a": 75,
-      "note": "Around three quarters: about 3,700 of roughly 5,500 wild tigers (2022-23 estimates)."
+      "note": "Around three quarters: about 3,700 of roughly 5,500 wild tigers (2022-23 estimates).",
+      "unit": "%"
     },
     {
       "id": "p-e6",
       "levels": ["easy"],
       "q": "What percentage of India's land is forest cover?",
       "a": 22,
-      "note": "India State of Forest Report 2021: 21.7%."
+      "note": "India State of Forest Report 2021: 21.7%.",
+      "unit": "%"
     },
     {
       "id": "p-m1",
       "levels": [],
       "q": "What percentage of Indian adults describe themselves as vegetarian?",
       "a": 39,
-      "note": "Pew Research, 2021. Far lower than most people assume."
+      "note": "Pew Research, 2021. Far lower than most people assume.",
+      "unit": "%"
     },
     {
       "id": "p-m2",
-      "levels": ["medium"],
+      "levels": [],
       "q": "What percentage of married Indians say their marriage was arranged?",
       "a": 93,
-      "note": "Lok Foundation / CSDS survey, 2018: 93%. Only 3% called it a love marriage."
+      "note": "Lok Foundation / CSDS survey, 2018: 93%. Only 3% called it a love marriage.",
+      "unit": "%"
     },
     {
       "id": "p-m3",
-      "levels": ["medium"],
+      "levels": [],
       "q": "What percentage of Indian households own a car?",
       "a": 8,
-      "note": "NFHS-5 (2019-21): about 7.5%. Two-wheelers: around 50%."
+      "note": "NFHS-5 (2019-21): about 7.5%. Two-wheelers: around 50%.",
+      "unit": "%"
     },
     {
       "id": "p-m4",
       "levels": [],
       "q": "What percentage of Indian households own a refrigerator?",
       "a": 38,
-      "note": "NFHS-5: 38%. Television: 67%. Mobile phone: 93%."
+      "note": "NFHS-5: 38%. Television: 67%. Mobile phone: 93%.",
+      "unit": "%"
     },
     {
       "id": "p-m5",
       "levels": [],
       "q": "What percentage of the world's population lives in India?",
       "a": 18,
-      "note": "About 17.8%. India overtook China in 2023."
+      "note": "About 17.8%. India overtook China in 2023.",
+      "unit": "%"
     },
     {
       "id": "p-m6",
       "levels": [],
       "q": "What percentage of Indians speak Hindi as their mother tongue?",
       "a": 44,
-      "note": "Census 2011: 43.6%. Bengali is next at about 8%."
+      "note": "Census 2011: 43.6%. Bengali is next at about 8%.",
+      "unit": "%"
     },
     {
       "id": "p-h1",
       "levels": ["hard"],
       "q": "What percentage of India's GDP comes from agriculture?",
       "a": 18,
-      "note": "Around 18% (2022-23), while it employs over 40% of workers."
+      "note": "Around 18% (2022-23), while it employs over 40% of workers.",
+      "unit": "%"
     },
     {
       "id": "p-h2",
-      "levels": ["medium", "hard"],
+      "levels": ["hard"],
       "q": "What percentage of members in the current Lok Sabha are women?",
       "a": 14,
-      "note": "74 of 543 in the 18th Lok Sabha: 13.6%."
+      "note": "74 of 543 in the 18th Lok Sabha: 13.6%.",
+      "unit": "%"
     },
     {
       "id": "p-h3",
       "levels": ["hard"],
       "q": "What percentage of India's electricity generation comes from coal?",
       "a": 75,
-      "note": "Around 73-75% in 2023, despite the solar boom."
+      "note": "Around 73-75% in 2023, despite the solar boom.",
+      "unit": "%"
     },
     {
       "id": "p-h4",
       "levels": ["hard"],
       "q": "What percentage of Indians belong to Scheduled Tribes?",
       "a": 9,
-      "note": "Census 2011: 8.6%. Scheduled Castes: 16.6%."
+      "note": "Census 2011: 8.6%. Scheduled Castes: 16.6%.",
+      "unit": "%"
     },
     {
       "id": "p-h5",
       "levels": ["hard"],
       "q": "What percentage of the world's milk is produced in India?",
       "a": 24,
-      "note": "About 24%, the largest producer, thanks to Operation Flood."
+      "note": "About 24%, the largest producer, thanks to Operation Flood.",
+      "unit": "%"
     },
     {
       "id": "p-h6",
       "levels": ["hard"],
       "q": "What percentage of Indians hold a valid passport?",
       "a": 7,
-      "note": "Roughly 9-10 crore passports in a population of 140 crore: about 7%."
+      "note": "Roughly 9-10 crore passports in a population of 140 crore: about 7%.",
+      "unit": "%"
     },
     {
       "id": "p-n1",
@@ -481,7 +590,8 @@ const QUESTION_BANK = {
       "a": 46,
       "note": "PLFS 2022-23: about 45.8%. Agriculture is under 20% of GDP.",
       "levels": [],
-      "suggested": "medium"
+      "suggested": "medium",
+      "unit": "%"
     },
     {
       "id": "p-n2",
@@ -489,7 +599,8 @@ const QUESTION_BANK = {
       "a": 37,
       "note": "PLFS 2022-23: 37%. One of the lowest among large economies.",
       "levels": [],
-      "suggested": "medium"
+      "suggested": "medium",
+      "unit": "%"
     },
     {
       "id": "p-n3",
@@ -497,7 +608,8 @@ const QUESTION_BANK = {
       "a": 19,
       "note": "NFHS-5: 19% of men, 1% of women.",
       "levels": [],
-      "suggested": "medium"
+      "suggested": "medium",
+      "unit": "%"
     },
     {
       "id": "p-n4",
@@ -505,7 +617,8 @@ const QUESTION_BANK = {
       "a": 41,
       "note": "Census 2011: 41.3%, about 5.2 million people.",
       "levels": [],
-      "suggested": "medium"
+      "suggested": "medium",
+      "unit": "%"
     },
     {
       "id": "p-n5",
@@ -513,7 +626,8 @@ const QUESTION_BANK = {
       "a": 10,
       "note": "Census 2011: about 10.6%, almost all as a second or third language.",
       "levels": [],
-      "suggested": "medium"
+      "suggested": "medium",
+      "unit": "%"
     },
     {
       "id": "p-n6",
@@ -521,7 +635,8 @@ const QUESTION_BANK = {
       "a": 47,
       "note": "Census 2011: about 47%. Still above 40% today; median age 28.",
       "levels": [],
-      "suggested": "medium"
+      "suggested": "medium",
+      "unit": "%"
     },
     {
       "id": "p-n7",
@@ -529,7 +644,8 @@ const QUESTION_BANK = {
       "a": 24,
       "note": "131 of 543 seats: 84 SC + 47 ST, about 24%.",
       "levels": [],
-      "suggested": "hard"
+      "suggested": "hard",
+      "unit": "%"
     },
     {
       "id": "p-n8",
@@ -537,7 +653,8 @@ const QUESTION_BANK = {
       "a": 10,
       "note": "About 10.5% in 2021, projected to reach 20% by 2050.",
       "levels": [],
-      "suggested": "hard"
+      "suggested": "hard",
+      "unit": "%"
     },
     {
       "id": "p-n9",
@@ -545,7 +662,8 @@ const QUESTION_BANK = {
       "a": 18,
       "note": "2023-24: about 17-18%, the largest single destination.",
       "levels": [],
-      "suggested": "hard"
+      "suggested": "hard",
+      "unit": "%"
     },
     {
       "id": "p-n10",
@@ -553,7 +671,8 @@ const QUESTION_BANK = {
       "a": 54,
       "note": "Around 53-55% in 2023-24. Industry is roughly 28%.",
       "levels": [],
-      "suggested": "hard"
+      "suggested": "hard",
+      "unit": "%"
     },
     {
       "id": "p-n11",
@@ -561,7 +680,8 @@ const QUESTION_BANK = {
       "a": 26,
       "note": "About 26-27%, second only to China.",
       "levels": [],
-      "suggested": "hard"
+      "suggested": "hard",
+      "unit": "%"
     },
     {
       "id": "p-n12",
@@ -569,7 +689,8 @@ const QUESTION_BANK = {
       "a": 59,
       "note": "NFHS-5 (2019-21): 59%. Was 44% five years earlier.",
       "levels": [],
-      "suggested": "hard"
+      "suggested": "hard",
+      "unit": "%"
     }
   ],
   "board": [
@@ -579,10 +700,26 @@ const QUESTION_BANK = {
       "title": "Apple Products",
       "meaning": "Fruit. Just fruit.",
       "tiles": [
-        { "pts": 100, "q": "Which fruit is the national fruit of India?", "a": "Mango" },
-        { "pts": 200, "q": "Which fruit shares its name with a colour?", "a": "Orange" },
-        { "pts": 300, "q": "Bananas are famous for which mineral, the one that helps with cramps?", "a": "Potassium" },
-        { "pts": 400, "q": "Jackfruit is the state fruit of Kerala and which other state?", "a": "Tamil Nadu" }
+        {
+          "pts": 100,
+          "q": "Which fruit is the national fruit of India?",
+          "a": "Mango"
+        },
+        {
+          "pts": 200,
+          "q": "Which fruit shares its name with a colour?",
+          "a": "Orange"
+        },
+        {
+          "pts": 300,
+          "q": "Bananas are famous for which mineral, the one that helps with cramps?",
+          "a": "Potassium"
+        },
+        {
+          "pts": 400,
+          "q": "Jackfruit is the state fruit of Kerala and which other state?",
+          "a": "Tamil Nadu"
+        }
       ]
     },
     {
@@ -591,10 +728,26 @@ const QUESTION_BANK = {
       "title": "Chai Pe Charcha",
       "meaning": "Tea, not politics.",
       "tiles": [
-        { "pts": 100, "q": "Which Indian state produces the most tea?", "a": "Assam" },
-        { "pts": 200, "q": "Name any two of the spices usually found in masala chai.", "a": "Cardamom, ginger, cloves, cinnamon, black pepper (any two)" },
-        { "pts": 300, "q": "Darjeeling tea is grown in which state?", "a": "West Bengal" },
-        { "pts": 400, "q": "Which country drinks the most tea per person: Turkey, India or the UK?", "a": "Turkey" }
+        {
+          "pts": 100,
+          "q": "Which Indian state produces the most tea?",
+          "a": "Assam"
+        },
+        {
+          "pts": 200,
+          "q": "Name any two of the spices usually found in masala chai.",
+          "a": "Cardamom, ginger, cloves, cinnamon, black pepper (any two)"
+        },
+        {
+          "pts": 300,
+          "q": "Darjeeling tea is grown in which state?",
+          "a": "West Bengal"
+        },
+        {
+          "pts": 400,
+          "q": "Which country drinks the most tea per person: Turkey, India or the UK?",
+          "a": "Turkey"
+        }
       ],
       "allIn": 3
     },
@@ -604,22 +757,55 @@ const QUESTION_BANK = {
       "title": "Cold Play",
       "meaning": "Cold things, not the band.",
       "tiles": [
-        { "pts": 100, "q": "Which Indian cricket captain is nicknamed Captain Cool?", "a": "M. S. Dhoni" },
-        { "pts": 200, "q": "Which continent has no countries and no permanent population?", "a": "Antarctica" },
-        { "pts": 300, "q": "Water freezes at 0 degrees Celsius. What is that in Fahrenheit?", "a": "32" },
-        { "pts": 400, "q": "In the film Frozen, what kind of creature is Olaf?", "a": "A snowman" }
+        {
+          "pts": 100,
+          "q": "Which Indian cricket captain is nicknamed Captain Cool?",
+          "a": "M. S. Dhoni"
+        },
+        {
+          "pts": 200,
+          "q": "Which continent has no countries and no permanent population?",
+          "a": "Antarctica"
+        },
+        {
+          "pts": 300,
+          "q": "Water freezes at 0 degrees Celsius. What is that in Fahrenheit?",
+          "a": "32"
+        },
+        {
+          "pts": 400,
+          "q": "In the film Frozen, what kind of creature is Olaf?",
+          "a": "A snowman"
+        }
       ]
     },
     {
       "id": "b-e4",
       "levels": ["easy", "medium"],
       "title": "Startup India",
-      "meaning": "Things whose name starts with 'India'.",
+      "meaning": "A playful mix of India-named things and Indian brand/startup origin stories.",
       "tiles": [
-        { "pts": 100, "q": "India Gate was built to honour Indian soldiers who died in which war?", "a": "The First World War (and the Third Anglo-Afghan War)" },
-        { "pts": 200, "q": "Air India began life in 1932 under which name?", "a": "Tata Airlines (Tata Air Services)" },
-        { "pts": 300, "q": "India Pale Ale was brewed extra strong and hoppy so that it could survive what?", "a": "The sea voyage from Britain to India" },
-        { "pts": 400, "q": "Indian Standard Time is set from which line of longitude, which passes near Mirzapur?", "a": "82.5° East" }
+        {
+          "pts": 100,
+          "q": "India Gate was built to honour Indian soldiers who died in which war?",
+          "a": "The First World War (and the Third Anglo-Afghan War)"
+        },
+        {
+          "pts": 200,
+          "q": "Air India began life in 1932 under which name?",
+          "a": "Tata Airlines (Tata Air Services)"
+        },
+        {
+          "pts": 300,
+          "q": "Before it became one of India's most recognisable food-delivery brands, what was Zomato originally called?",
+          "a": "Foodiebay",
+          "note": "It began as a restaurant-menu discovery website; it was renamed Zomato in 2010."
+        },
+        {
+          "pts": 400,
+          "q": "Indian Standard Time is set from which line of longitude, which passes near Mirzapur?",
+          "a": "82.5° East"
+        }
       ]
     },
     {
@@ -628,10 +814,26 @@ const QUESTION_BANK = {
       "title": "Monkey Business",
       "meaning": "Monkeys, Hanuman and monkey kings.",
       "tiles": [
-        { "pts": 100, "q": "What did Hanuman carry across the sky to save Lakshman?", "a": "A mountain (for the Sanjeevani herb)" },
-        { "pts": 200, "q": "In The Jungle Book, what is the name of the orangutan king?", "a": "King Louie" },
-        { "pts": 300, "q": "The Jakhoo Hanuman temple, famous for its monkeys, is in which hill station?", "a": "Shimla" },
-        { "pts": 400, "q": "The Galta Ji 'monkey temple' is in which Rajasthan city?", "a": "Jaipur" }
+        {
+          "pts": 100,
+          "q": "What did Hanuman carry across the sky to save Lakshman?",
+          "a": "A mountain (for the Sanjeevani herb)"
+        },
+        {
+          "pts": 200,
+          "q": "In The Jungle Book, what is the name of the orangutan king?",
+          "a": "King Louie"
+        },
+        {
+          "pts": 300,
+          "q": "In the Ramayana, who was Sugriva's brother and rival?",
+          "a": "Vali (Bali)"
+        },
+        {
+          "pts": 400,
+          "q": "What is the name of Aladdin's monkey companion in Disney's animated film?",
+          "a": "Abu"
+        }
       ]
     },
     {
@@ -640,10 +842,26 @@ const QUESTION_BANK = {
       "title": "Large Language Models",
       "meaning": "Words and languages, not AI.",
       "tiles": [
-        { "pts": 100, "q": "Which Indian politician made the word 'farrago' trend in 2017?", "a": "Shashi Tharoor" },
-        { "pts": 200, "q": "The English word 'shampoo' comes from a Hindi word meaning what?", "a": "To press or massage (champo)" },
-        { "pts": 300, "q": "The English word 'juggernaut' comes from the chariot festival of which deity?", "a": "Jagannath (of Puri)" },
-        { "pts": 400, "q": "Which Indian language is written in the Ol Chiki script?", "a": "Santali" }
+        {
+          "pts": 100,
+          "q": "Which Indian politician made the word 'farrago' trend in 2017?",
+          "a": "Shashi Tharoor"
+        },
+        {
+          "pts": 200,
+          "q": "The English word 'shampoo' comes from a Hindi word meaning what?",
+          "a": "To press or massage (champo)"
+        },
+        {
+          "pts": 300,
+          "q": "The English word 'juggernaut' comes from the chariot festival of which deity?",
+          "a": "Jagannath (of Puri)"
+        },
+        {
+          "pts": 400,
+          "q": "Which Indian language is written in the Ol Chiki script?",
+          "a": "Santali"
+        }
       ]
     },
     {
@@ -652,10 +870,26 @@ const QUESTION_BANK = {
       "title": "Spicy Takes",
       "meaning": "Chillies and street food, not opinions.",
       "tiles": [
-        { "pts": 100, "q": "Which street food's name comes from the Hindi word for 'to lick'?", "a": "Chaat" },
-        { "pts": 200, "q": "Chillies are now India's thing, but which continent did they originally come from?", "a": "The Americas (brought by the Portuguese)" },
-        { "pts": 300, "q": "Which state's Guntur district is called India's chilli capital?", "a": "Andhra Pradesh" },
-        { "pts": 400, "q": "Vindaloo takes its name from two Portuguese words meaning what?", "a": "Wine (vinegar) and garlic" }
+        {
+          "pts": 100,
+          "q": "The name jalapeño comes from the name of a city in which country?",
+          "a": "Mexico"
+        },
+        {
+          "pts": 200,
+          "q": "Sriracha sauce takes its name from a coastal town in which country?",
+          "a": "Thailand"
+        },
+        {
+          "pts": 300,
+          "q": "Which state's Guntur district is called India's chilli capital?",
+          "a": "Andhra Pradesh"
+        },
+        {
+          "pts": 400,
+          "q": "Vindaloo takes its name from two Portuguese words meaning what?",
+          "a": "Wine (vinegar) and garlic"
+        }
       ]
     },
     {
@@ -664,10 +898,26 @@ const QUESTION_BANK = {
       "title": "Ghar Wapsi",
       "meaning": "Homecomings and returns of all kinds.",
       "tiles": [
-        { "pts": 100, "q": "In the film Swades, Shah Rukh Khan's character returns to India from which organisation?", "a": "NASA" },
-        { "pts": 200, "q": "Before Nvidia, in 2023 another company's CEO was also fired and then reappointed within days. Name the company and the CEO.", "a": "OpenAI, Sam Altman" },
-        { "pts": 300, "q": "Which astronaut came home in March 2025 after an eight-day trip turned into nine months?", "a": "Sunita Williams" },
-        { "pts": 400, "q": "Steve Jobs came home to Apple in 1997 when it bought the company he had founded in exile. Name that company.", "a": "NeXT" }
+        {
+          "pts": 100,
+          "q": "In the film Swades, Shah Rukh Khan's character returns to India from which organisation?",
+          "a": "NASA"
+        },
+        {
+          "pts": 200,
+          "q": "Before Nvidia, in 2023 another company's CEO was also fired and then reappointed within days. Name the company and the CEO.",
+          "a": "OpenAI, Sam Altman"
+        },
+        {
+          "pts": 300,
+          "q": "Which astronaut came home in March 2025 after an eight-day trip turned into nine months?",
+          "a": "Sunita Williams"
+        },
+        {
+          "pts": 400,
+          "q": "Steve Jobs came home to Apple in 1997 when it bought the company he had founded in exile. Name that company.",
+          "a": "NeXT"
+        }
       ],
       "allIn": 2
     },
@@ -675,12 +925,29 @@ const QUESTION_BANK = {
       "id": "b-m4",
       "levels": ["medium"],
       "title": "Cheap Thrills",
-      "meaning": "Famously cheap things, and one very expensive one.",
+      "meaning": "Famously cheap things, everyday products and one unexpected origin story.",
       "tiles": [
-        { "pts": 100, "q": "Which airline, started in 2003 by a former army captain, made 500-rupee fares a thing in India?", "a": "Air Deccan (Captain G. R. Gopinath)" },
-        { "pts": 200, "q": "Everyone knows Tata made the Nano, the one-lakh car. In which year was it launched?", "a": "2008" },
-        { "pts": 300, "q": "What is the smallest coin that is still legal tender in India?", "a": "50 paise" },
-        { "pts": 400, "q": "The opposite of cheap: whose painting 'The Story Teller' became the most expensive Indian artwork at auction in 2023?", "a": "Amrita Sher-Gil (about 61.8 crore)" }
+        {
+          "pts": 100,
+          "q": "Which airline, started in 2003 by a former army captain, made 500-rupee fares a thing in India?",
+          "a": "Air Deccan (Captain G. R. Gopinath)"
+        },
+        {
+          "pts": 200,
+          "q": "Everyone knows Tata made the Nano, the one-lakh car. In which year was it launched?",
+          "a": "2008"
+        },
+        {
+          "pts": 300,
+          "q": "What is the smallest coin that is still legal tender in India?",
+          "a": "50 paise"
+        },
+        {
+          "pts": 400,
+          "q": "Which household product was originally marketed as a treatment for headaches before becoming famous as a soft drink?",
+          "a": "Coca-Cola",
+          "note": "It was first sold in 1886 and initially promoted as a patent medicine."
+        }
       ]
     },
     {
@@ -689,10 +956,26 @@ const QUESTION_BANK = {
       "title": "Over the Moon",
       "meaning": "Literally the Moon.",
       "tiles": [
-        { "pts": 100, "q": "What was the name of the lander that put India near the Moon's south pole in 2023?", "a": "Vikram (Chandrayaan-3)" },
-        { "pts": 200, "q": "The Taj Mahal opens for night viewing around which lunar event each month?", "a": "The full moon" },
-        { "pts": 300, "q": "Apart from Mercury, which planet in our Solar System has no moons?", "a": "Venus" },
-        { "pts": 400, "q": "Which 2008 ISRO mission found evidence of water molecules on the Moon?", "a": "Chandrayaan-1" }
+        {
+          "pts": 100,
+          "q": "What was the name of the lander that put India near the Moon's south pole in 2023?",
+          "a": "Vikram (Chandrayaan-3)"
+        },
+        {
+          "pts": 200,
+          "q": "The Taj Mahal opens for night viewing around which lunar event each month?",
+          "a": "The full moon"
+        },
+        {
+          "pts": 300,
+          "q": "Apart from Mercury, which planet in our Solar System has no moons?",
+          "a": "Venus"
+        },
+        {
+          "pts": 400,
+          "q": "Which 2008 ISRO mission found evidence of water molecules on the Moon?",
+          "a": "Chandrayaan-1"
+        }
       ]
     },
     {
@@ -701,10 +984,26 @@ const QUESTION_BANK = {
       "title": "Bench Press",
       "meaning": "Courts and judges, not the gym.",
       "tiles": [
-        { "pts": 100, "q": "How many judges does the Supreme Court of India have at full strength?", "a": "34" },
-        { "pts": 200, "q": "Which 1973 case gave us the 'basic structure' doctrine of the Constitution?", "a": "Kesavananda Bharati" },
-        { "pts": 300, "q": "Who was the first woman judge of the Supreme Court of India?", "a": "Justice Fathima Beevi" },
-        { "pts": 400, "q": "In which year did the Supreme Court move out of Parliament House into its own building?", "a": "1958" }
+        {
+          "pts": 100,
+          "q": "How many judges does the Supreme Court of India have at full strength?",
+          "a": "34"
+        },
+        {
+          "pts": 200,
+          "q": "Which 1973 case gave us the 'basic structure' doctrine of the Constitution?",
+          "a": "Kesavananda Bharati"
+        },
+        {
+          "pts": 300,
+          "q": "Who was the first woman judge of the Supreme Court of India?",
+          "a": "Justice Fathima Beevi"
+        },
+        {
+          "pts": 400,
+          "q": "In which year did the Supreme Court move out of Parliament House into its own building?",
+          "a": "1958"
+        }
       ]
     },
     {
@@ -713,10 +1012,26 @@ const QUESTION_BANK = {
       "title": "Family Drama",
       "meaning": "The Mughals, who had plenty.",
       "tiles": [
-        { "pts": 100, "q": "Who was the first Mughal emperor?", "a": "Babur" },
-        { "pts": 200, "q": "Which Mughal emperor was imprisoned in Agra Fort by his own son?", "a": "Shah Jahan" },
-        { "pts": 300, "q": "Akbar's capital, abandoned within years for lack of water, was which city?", "a": "Fatehpur Sikri" },
-        { "pts": 400, "q": "Which Mughal emperor ruled the longest, nearly 49 years?", "a": "Aurangzeb" }
+        {
+          "pts": 100,
+          "q": "Who was the first Mughal emperor?",
+          "a": "Babur"
+        },
+        {
+          "pts": 200,
+          "q": "Which Mughal emperor was imprisoned in Agra Fort by his own son?",
+          "a": "Shah Jahan"
+        },
+        {
+          "pts": 300,
+          "q": "Akbar's capital, abandoned within years for lack of water, was which city?",
+          "a": "Fatehpur Sikri"
+        },
+        {
+          "pts": 400,
+          "q": "Which Mughal emperor ruled the longest, nearly 49 years?",
+          "a": "Aurangzeb"
+        }
       ]
     },
     {
@@ -725,10 +1040,26 @@ const QUESTION_BANK = {
       "title": "Silicon Valley",
       "meaning": "Silicon, chips and the people who make them.",
       "tiles": [
-        { "pts": 100, "q": "Which Indian city is called the Silicon Valley of India?", "a": "Bengaluru" },
-        { "pts": 200, "q": "What is the atomic number of silicon?", "a": "14" },
-        { "pts": 300, "q": "F. C. Kohli, the father of the Indian IT industry, built which company?", "a": "TCS (Tata Consultancy Services)" },
-        { "pts": 400, "q": "Tata's semiconductor fab, announced in 2024, is being built in which Gujarat town?", "a": "Dholera" }
+        {
+          "pts": 100,
+          "q": "Which Indian city is called the Silicon Valley of India?",
+          "a": "Bengaluru"
+        },
+        {
+          "pts": 200,
+          "q": "What is the atomic number of silicon?",
+          "a": "14"
+        },
+        {
+          "pts": 300,
+          "q": "F. C. Kohli, the father of the Indian IT industry, built which company?",
+          "a": "TCS (Tata Consultancy Services)"
+        },
+        {
+          "pts": 400,
+          "q": "Tata's semiconductor fab, announced in 2024, is being built in which Gujarat town?",
+          "a": "Dholera"
+        }
       ]
     },
     {
@@ -737,10 +1068,26 @@ const QUESTION_BANK = {
       "title": "Sound of Music",
       "meaning": "Indian classical music.",
       "tiles": [
-        { "pts": 100, "q": "How many swaras are there in the Indian sargam?", "a": "Seven" },
-        { "pts": 200, "q": "Which instrument made Zakir Hussain famous?", "a": "Tabla" },
-        { "pts": 300, "q": "Which Hindustani raga is traditionally performed at dawn and shares its name with a form of Shiva?", "a": "Bhairav" },
-        { "pts": 400, "q": "The Carnatic 'trinity' is Tyagaraja, Muthuswami Dikshitar and who?", "a": "Syama Sastri" }
+        {
+          "pts": 100,
+          "q": "How many swaras are there in the Indian sargam?",
+          "a": "Seven"
+        },
+        {
+          "pts": 200,
+          "q": "Which instrument made Zakir Hussain famous?",
+          "a": "Tabla"
+        },
+        {
+          "pts": 300,
+          "q": "Which Hindustani raga is traditionally performed at dawn and shares its name with a form of Shiva?",
+          "a": "Bhairav"
+        },
+        {
+          "pts": 400,
+          "q": "The Carnatic 'trinity' is Tyagaraja, Muthuswami Dikshitar and who?",
+          "a": "Syama Sastri"
+        }
       ],
       "allIn": 2
     },
@@ -750,10 +1097,26 @@ const QUESTION_BANK = {
       "title": "Bank Holiday",
       "meaning": "Banks and banknotes.",
       "tiles": [
-        { "pts": 100, "q": "Which space mission is pictured on the back of the 2,000 rupee note?", "a": "Mangalyaan" },
-        { "pts": 200, "q": "In which year were 14 major Indian banks nationalised?", "a": "1969" },
-        { "pts": 300, "q": "Which bank, founded in 1770, was the first in India?", "a": "Bank of Hindustan" },
-        { "pts": 400, "q": "Whose signature is on the one rupee note, since it is not issued by the RBI?", "a": "The Finance Secretary" }
+        {
+          "pts": 100,
+          "q": "Which space mission is pictured on the back of the 2,000 rupee note?",
+          "a": "Mangalyaan"
+        },
+        {
+          "pts": 200,
+          "q": "In which year were 14 major Indian banks nationalised?",
+          "a": "1969"
+        },
+        {
+          "pts": 300,
+          "q": "Which bank, founded in 1770, was the first in India?",
+          "a": "Bank of Hindustan"
+        },
+        {
+          "pts": 400,
+          "q": "Whose signature is on the one rupee note, since it is not issued by the RBI?",
+          "a": "The Finance Secretary"
+        }
       ]
     },
     {
@@ -761,10 +1124,26 @@ const QUESTION_BANK = {
       "title": "Game of Thrones",
       "meaning": "Indian royals and their actual thrones.",
       "tiles": [
-        { "pts": 100, "q": "Nadir Shah looted the Peacock Throne in 1739 from which city?", "a": "Delhi" },
-        { "pts": 200, "q": "The Wadiyar dynasty ruled from which city, famous for its palace and Dussehra?", "a": "Mysore" },
-        { "pts": 300, "q": "Which princely state held out after 1947 until 'Operation Polo' in 1948?", "a": "Hyderabad" },
-        { "pts": 400, "q": "Which princely state was the largest by area at independence?", "a": "Jammu and Kashmir (ahead of Hyderabad)" }
+        {
+          "pts": 100,
+          "q": "Nadir Shah looted the Peacock Throne in 1739 from which city?",
+          "a": "Delhi"
+        },
+        {
+          "pts": 200,
+          "q": "The Wadiyar dynasty ruled from which city, famous for its palace and Dussehra?",
+          "a": "Mysore"
+        },
+        {
+          "pts": 300,
+          "q": "Which princely state held out after 1947 until 'Operation Polo' in 1948?",
+          "a": "Hyderabad"
+        },
+        {
+          "pts": 400,
+          "q": "Which princely state was the largest by area at independence?",
+          "a": "Jammu and Kashmir (ahead of Hyderabad)"
+        }
       ],
       "levels": [],
       "suggested": "medium"
@@ -774,10 +1153,26 @@ const QUESTION_BANK = {
       "title": "Fast & Furious",
       "meaning": "Speed records and racing.",
       "tiles": [
-        { "pts": 100, "q": "Who bowled the fastest recorded ball in cricket, 161.3 km/h in 2003?", "a": "Shoaib Akhtar" },
-        { "pts": 200, "q": "Which bird is the fastest animal on Earth, in a dive?", "a": "Peregrine falcon" },
-        { "pts": 300, "q": "Which Indian circuit near Delhi hosted Formula 1 from 2011 to 2013?", "a": "Buddh International Circuit (Greater Noida)" },
-        { "pts": 400, "q": "Who became India's first Formula 1 driver, in 2005?", "a": "Narain Karthikeyan" }
+        {
+          "pts": 100,
+          "q": "Who bowled the fastest recorded ball in cricket, 161.3 km/h in 2003?",
+          "a": "Shoaib Akhtar"
+        },
+        {
+          "pts": 200,
+          "q": "Which bird is the fastest animal on Earth, in a dive?",
+          "a": "Peregrine falcon"
+        },
+        {
+          "pts": 300,
+          "q": "Which Indian circuit near Delhi hosted Formula 1 from 2011 to 2013?",
+          "a": "Buddh International Circuit (Greater Noida)"
+        },
+        {
+          "pts": 400,
+          "q": "Who became India's first Formula 1 driver, in 2005?",
+          "a": "Narain Karthikeyan"
+        }
       ],
       "levels": [],
       "suggested": "medium"
@@ -787,10 +1182,26 @@ const QUESTION_BANK = {
       "title": "Spotify Wrapped",
       "meaning": "Indian music, film and otherwise.",
       "tiles": [
-        { "pts": 100, "q": "Who sang 'Kesariya' from Brahmastra?", "a": "Arijit Singh" },
-        { "pts": 200, "q": "'Jai Ho' won the Oscar for Best Original Song for which film?", "a": "Slumdog Millionaire" },
-        { "pts": 300, "q": "Which composer wrote 'Naatu Naatu', the 2023 Oscar winner?", "a": "M. M. Keeravani" },
-        { "pts": 400, "q": "Lucky Ali's 'O Sanam' came from which 1996 album?", "a": "Sunoh" }
+        {
+          "pts": 100,
+          "q": "Who sang 'Kesariya' from Brahmastra?",
+          "a": "Arijit Singh"
+        },
+        {
+          "pts": 200,
+          "q": "'Jai Ho' won the Oscar for Best Original Song for which film?",
+          "a": "Slumdog Millionaire"
+        },
+        {
+          "pts": 300,
+          "q": "Which composer wrote 'Naatu Naatu', the 2023 Oscar winner?",
+          "a": "M. M. Keeravani"
+        },
+        {
+          "pts": 400,
+          "q": "Lucky Ali's 'O Sanam' came from which 1996 album?",
+          "a": "Sunoh"
+        }
       ],
       "levels": [],
       "suggested": "medium"
@@ -800,10 +1211,26 @@ const QUESTION_BANK = {
       "title": "Bull Run",
       "meaning": "Wildlife, not the stock market.",
       "tiles": [
-        { "pts": 100, "q": "Which Indian state has the most tigers?", "a": "Madhya Pradesh" },
-        { "pts": 200, "q": "The Gir forest is the last wild home of which animal?", "a": "The Asiatic lion" },
-        { "pts": 300, "q": "The Nilgiri tahr is the state animal of which state?", "a": "Tamil Nadu" },
-        { "pts": 400, "q": "Project Cheetah brought cheetahs to Kuno from which two countries?", "a": "Namibia and South Africa" }
+        {
+          "pts": 100,
+          "q": "Which Indian state has the most tigers?",
+          "a": "Madhya Pradesh"
+        },
+        {
+          "pts": 200,
+          "q": "The Gir forest is the last wild home of which animal?",
+          "a": "The Asiatic lion"
+        },
+        {
+          "pts": 300,
+          "q": "The Nilgiri tahr is the state animal of which state?",
+          "a": "Tamil Nadu"
+        },
+        {
+          "pts": 400,
+          "q": "Project Cheetah brought cheetahs to Kuno from which two countries?",
+          "a": "Namibia and South Africa"
+        }
       ],
       "levels": [],
       "suggested": "medium"
@@ -813,10 +1240,26 @@ const QUESTION_BANK = {
       "title": "Reply All",
       "meaning": "Letters, stamps and the post.",
       "tiles": [
-        { "pts": 100, "q": "What does PIN stand for in PIN code?", "a": "Postal Index Number" },
-        { "pts": 200, "q": "Hikkim, home to the world's highest post office, is in which state?", "a": "Himachal Pradesh" },
-        { "pts": 300, "q": "Whose letters to his daughter from prison became the book 'Glimpses of World History'?", "a": "Jawaharlal Nehru" },
-        { "pts": 400, "q": "The Scinde Dawk, Asia's first postage stamp, was issued in which year?", "a": "1852" }
+        {
+          "pts": 100,
+          "q": "What does PIN stand for in PIN code?",
+          "a": "Postal Index Number"
+        },
+        {
+          "pts": 200,
+          "q": "Hikkim, home to the world's highest post office, is in which state?",
+          "a": "Himachal Pradesh"
+        },
+        {
+          "pts": 300,
+          "q": "Whose letters to his daughter from prison became the book 'Glimpses of World History'?",
+          "a": "Jawaharlal Nehru"
+        },
+        {
+          "pts": 400,
+          "q": "The Scinde Dawk, Asia's first postage stamp, was issued in which year?",
+          "a": "1852"
+        }
       ],
       "levels": [],
       "suggested": "medium"
@@ -826,10 +1269,26 @@ const QUESTION_BANK = {
       "title": "Prime Time",
       "meaning": "Prime numbers and prime ministers.",
       "tiles": [
-        { "pts": 100, "q": "Which is the only even prime number?", "a": "2" },
-        { "pts": 200, "q": "Which Prime Minister's first term lasted just 13 days, in 1996?", "a": "Atal Bihari Vajpayee" },
-        { "pts": 300, "q": "Which Prime Minister served two full terms without ever being a Lok Sabha member?", "a": "Manmohan Singh (Rajya Sabha)" },
-        { "pts": 400, "q": "Who was the first Prime Minister born after independence?", "a": "Narendra Modi (born 1950)" }
+        {
+          "pts": 100,
+          "q": "Which is the only even prime number?",
+          "a": "2"
+        },
+        {
+          "pts": 200,
+          "q": "Which Prime Minister's first term lasted just 13 days, in 1996?",
+          "a": "Atal Bihari Vajpayee"
+        },
+        {
+          "pts": 300,
+          "q": "Which Prime Minister served two full terms without ever being a Lok Sabha member?",
+          "a": "Manmohan Singh (Rajya Sabha)"
+        },
+        {
+          "pts": 400,
+          "q": "Who was the first Prime Minister born after independence?",
+          "a": "Narendra Modi (born 1950)"
+        }
       ],
       "levels": [],
       "suggested": "hard"
@@ -839,10 +1298,26 @@ const QUESTION_BANK = {
       "title": "Cloud Computing",
       "meaning": "Weather and the monsoon.",
       "tiles": [
-        { "pts": 100, "q": "India's summer monsoon arrives on which wind: southwest or northeast?", "a": "Southwest" },
-        { "pts": 200, "q": "Mawsynram, the wettest place on Earth, is in which state?", "a": "Meghalaya" },
-        { "pts": 300, "q": "Which Pacific warming event tends to weaken the Indian monsoon?", "a": "El Niño" },
-        { "pts": 400, "q": "India's weather supercomputer carries a Sanskrit name meaning 'sun'. What is it?", "a": "Pratyush" }
+        {
+          "pts": 100,
+          "q": "India's summer monsoon arrives on which wind: southwest or northeast?",
+          "a": "Southwest"
+        },
+        {
+          "pts": 200,
+          "q": "Mawsynram, the wettest place on Earth, is in which state?",
+          "a": "Meghalaya"
+        },
+        {
+          "pts": 300,
+          "q": "Which Pacific warming event tends to weaken the Indian monsoon?",
+          "a": "El Niño"
+        },
+        {
+          "pts": 400,
+          "q": "India's weather supercomputer carries a Sanskrit name meaning 'sun'. What is it?",
+          "a": "Pratyush"
+        }
       ],
       "levels": [],
       "suggested": "hard"
@@ -852,10 +1327,26 @@ const QUESTION_BANK = {
       "title": "Supreme Leader",
       "meaning": "Presidents of India.",
       "tiles": [
-        { "pts": 100, "q": "Who was the first President of India?", "a": "Dr. Rajendra Prasad" },
-        { "pts": 200, "q": "Who was India's first woman President?", "a": "Pratibha Patil" },
-        { "pts": 300, "q": "Which President's birthday is celebrated as Teachers' Day?", "a": "Dr. S. Radhakrishnan" },
-        { "pts": 400, "q": "Which President, in office 1997 to 2002, was the first from a Dalit background?", "a": "K. R. Narayanan" }
+        {
+          "pts": 100,
+          "q": "Who was the first President of India?",
+          "a": "Dr. Rajendra Prasad"
+        },
+        {
+          "pts": 200,
+          "q": "Who was India's first woman President?",
+          "a": "Pratibha Patil"
+        },
+        {
+          "pts": 300,
+          "q": "Which President's birthday is celebrated as Teachers' Day?",
+          "a": "Dr. S. Radhakrishnan"
+        },
+        {
+          "pts": 400,
+          "q": "Which President, in office 1997 to 2002, was the first from a Dalit background?",
+          "a": "K. R. Narayanan"
+        }
       ],
       "levels": [],
       "suggested": "hard"
@@ -865,10 +1356,26 @@ const QUESTION_BANK = {
       "title": "Unicorn Hunting",
       "meaning": "Indian startups.",
       "tiles": [
-        { "pts": 100, "q": "Flipkart was bought in 2018 by which American retailer?", "a": "Walmart" },
-        { "pts": 200, "q": "Who founded Paytm?", "a": "Vijay Shekhar Sharma" },
-        { "pts": 300, "q": "Which ad-tech company became India's first unicorn, in 2011?", "a": "InMobi" },
-        { "pts": 400, "q": "Zepto's two founders dropped out of which American university?", "a": "Stanford" }
+        {
+          "pts": 100,
+          "q": "Flipkart was bought in 2018 by which American retailer?",
+          "a": "Walmart"
+        },
+        {
+          "pts": 200,
+          "q": "Who founded Paytm?",
+          "a": "Vijay Shekhar Sharma"
+        },
+        {
+          "pts": 300,
+          "q": "Which ad-tech company became India's first unicorn, in 2011?",
+          "a": "InMobi"
+        },
+        {
+          "pts": 400,
+          "q": "Zepto's two founders dropped out of which American university?",
+          "a": "Stanford"
+        }
       ],
       "levels": [],
       "suggested": "hard"
@@ -878,10 +1385,26 @@ const QUESTION_BANK = {
       "title": "Lost in Translation",
       "meaning": "Indian languages and scripts.",
       "tiles": [
-        { "pts": 100, "q": "What is the official language of Goa?", "a": "Konkani" },
-        { "pts": 200, "q": "Which Indian language has the oldest surviving literature, the Sangam poems?", "a": "Tamil" },
-        { "pts": 300, "q": "In which script is Punjabi written in India?", "a": "Gurmukhi" },
-        { "pts": 400, "q": "Which language's name comes from a Turkic word for 'army camp'?", "a": "Urdu (from 'ordu')" }
+        {
+          "pts": 100,
+          "q": "What is the official language of Goa?",
+          "a": "Konkani"
+        },
+        {
+          "pts": 200,
+          "q": "Which Indian language has the oldest surviving literature, the Sangam poems?",
+          "a": "Tamil"
+        },
+        {
+          "pts": 300,
+          "q": "In which script is Punjabi written in India?",
+          "a": "Gurmukhi"
+        },
+        {
+          "pts": 400,
+          "q": "Which language's name comes from a Turkic word for 'army camp'?",
+          "a": "Urdu (from 'ordu')"
+        }
       ],
       "levels": [],
       "suggested": "hard"
@@ -1094,7 +1617,8 @@ const QUESTION_BANK = {
       "id": "e-e6",
       "levels": ["easy", "medium"],
       "emoji": "🏏🇬🇧🌧️",
-      "a": "Lagaan"
+      "a": "Lagaan",
+      "note": ""
     },
     {
       "id": "e-e7",
@@ -1133,13 +1657,15 @@ const QUESTION_BANK = {
       "id": "e-m4",
       "levels": ["medium"],
       "emoji": "👩🇺🇸📚🗣️",
-      "a": "English Vinglish"
+      "a": "English Vinglish",
+      "note": ""
     },
     {
       "id": "e-m5",
       "levels": ["medium"],
       "emoji": "🎤🏚️🧢",
-      "a": "Gully Boy"
+      "a": "Gully Boy",
+      "note": ""
     },
     {
       "id": "e-m6",
@@ -1159,7 +1685,8 @@ const QUESTION_BANK = {
       "id": "e-m8",
       "levels": ["medium"],
       "emoji": "🐯⛵🌊",
-      "a": "Life of Pi"
+      "a": "Life of Pi",
+      "note": ""
     },
     {
       "id": "e-h1",
@@ -1171,7 +1698,8 @@ const QUESTION_BANK = {
       "id": "e-h2",
       "levels": ["medium", "hard"],
       "emoji": "🤰🔍🎭",
-      "a": "Kahaani"
+      "a": "Kahaani",
+      "note": ""
     },
     {
       "id": "e-h3",
@@ -1189,19 +1717,22 @@ const QUESTION_BANK = {
       "id": "e-h5",
       "levels": ["medium", "hard"],
       "emoji": "🎲🔴🟢🔵🟡",
-      "a": "Ludo"
+      "a": "Ludo",
+      "note": ""
     },
     {
       "id": "e-h6",
       "levels": ["medium", "hard"],
       "emoji": "🎸💔🎤",
-      "a": "Rockstar"
+      "a": "Rockstar",
+      "note": ""
     },
     {
       "id": "e-h7",
       "levels": ["medium", "hard"],
       "emoji": "🙈🎹🔪",
-      "a": "Andhadhun"
+      "a": "Andhadhun",
+      "note": ""
     },
     {
       "id": "e-h8",
@@ -1540,7 +2071,7 @@ const QUESTION_BANK = {
 const SHOW = { title: "Nation Wants to Guess", subtitle: "SNN Edition" };
 const ROUNDS = [
   { id: "r1", type: "percent", tag: "Round 1", name: "Nation Wants to Guess",
-    rule: "A number question. Every team guesses a percentage. Closest guess takes the points; nobody else scores.", pts: { win: 100, second: 0 } },
+    rule: "A number question. Every team types a guess on the phone. Closest guess takes the points; nobody else scores.", pts: { win: 100, second: 0 } },
   { id: "r2", type: "board", tag: "Round 2", name: "Pick Me Behaviour",
     rule: "Teams take turns picking a tile. The category names are lying to you. Right answer, full points. Wrong answer, it passes to the other team for half. No minus points. One tile is All In." },
   { id: "r3", type: "rank", tag: "Round 3", name: "Rank Karo",
@@ -1559,6 +2090,7 @@ const LCODE={easy:"e",medium:"m",hard:"h"};
 const BANK=(typeof QUESTION_BANK==="object"&&QUESTION_BANK)||{percent:[],board:[],rank:[],emoji:[],who:[]};
 function itemLevels(it){ const o=G&&G.sel&&G.sel[it.id]; if(o!=null) return Object.keys(LCODE).filter(k=>o.includes(LCODE[k])); return it.levels||[]; }
 function inLevel(it,k){ return itemLevels(it).includes(k); }
+function fmtNum(it,v){ return v==null||v===""?"—":v+(it&&it.unit||""); }
 function bankPick(type,k){ return (BANK[type]||[]).filter(it=>inLevel(it,k)); }
 function buildPack(key){
   const k=LEVELS[key]?key:"medium"; const L=LEVELS[k];
@@ -1860,7 +2392,7 @@ function playerAuto(){ if(mode!=="buzz"||myTeam==null) return;
   if(live&&Date.now()-lastHb>20000){ lastHb=Date.now(); sendMsg("join",{}); }
   const sl=cur(), r=roundOf(sl); const rv=G.rev["s"+G.s]; if(sl.k==="q"&&r&&(r.type==="percent"||r.type==="rank")&&rv&&rv.phase==="open"&&rv.deadline&&Date.now()>rv.deadline-400&&sentFor!==G.s&&!(rv.sub&&rv.sub[myTeam])) submitAnswer(true); }
 function submitAnswer(auto){ const sl=cur(), r=roundOf(sl); if(!r||sentFor===G.s) return; sentFor=G.s;
-  if(r.type==="percent"){ const el=document.getElementById("pct"); if(el) pctDraft=el.value; const n=pctDraft===""?null:Math.max(0,Math.min(100,Number(pctDraft))); sendMsg("answer",{s:G.s,value:(n==null||isNaN(n))?null:n}); }
+  if(r.type==="percent"){ const el=document.getElementById("pct"); if(el) pctDraft=el.value; const n=pctDraft===""?null:Number(pctDraft); sendMsg("answer",{s:G.s,value:(n==null||isNaN(n))?null:n}); }
   else if(r.type==="rank"){ rkCommit(); sendMsg("answer",{s:G.s,order:rankDraft||[]}); }
   try{ navigator.vibrate&&navigator.vibrate(30); }catch(e){} render(); }
 function rkDown(e){ if(e.target.closest("button")) return; const row=e.currentTarget; try{ row.setPointerCapture(e.pointerId); }catch(x){} row.classList.add("drag"); rkDrag=row; e.preventDefault(); }
@@ -1875,12 +2407,12 @@ function leaveTeam(){ sendMsg("leave",{}); myTeam=null; savePlayer(); render(); 
 function plLeaderboard(){ return `<div class="log" style="font-size:1.05rem;width:100%;max-width:360px">${leaderboard().map((t,p)=>`<span style="display:flex;justify-content:space-between"><b style="color:${tc(t.i)}">${p+1}. ${esc(t.name)}</b><b class="num">${t.score}</b></span>`).join("")}</div>`; }
 function plFinal(){ if(drumOn()) return `<div class="pl-big drumroll">🥁</div><div class="bp-status">And the winner is…</div>`; const lb=leaderboard(); const w=lb[0]; const tie=lb.length>1&&lb[1].score===w.score; const me=G.teams[myTeam]; const mine=w.i===myTeam; return `<div class="pl-big">${tie?"🤝":mine?"🏆":"💐"}</div><h2 class="pl-h">${tie?"It's a tie!":mine?"Congratulations, "+esc(me.name)+"!":"Better luck next time"}</h2><div class="note">${tie?"Shared glory tonight.":mine?"You won the night with "+me.score+" points.":esc(w.name)+" took it with "+w.score+". You finished on "+me.score+"."}</div>${plLeaderboard()}`; }
 function plPercent(r,sl,rv){ const it=r.items[sl.i]; const sub=rv.sub&&rv.sub[myTeam]; const left=timerLeft();
-  if(rv.phase==="done"||rv.revealed){ const won=(rv.won||{})[myTeam]||0; const mine=sub&&sub.v!=null?sub.v+"%":"no answer"; return `<div class="eyebrow">The answer</div><div class="pl-big num">${it.a}%</div><div class="note">You said <b>${esc(mine)}</b></div><div class="pl-won ${won?"":"zero"}">${won?"+"+won+" · Closest!":"No points this time"}</div>`; }
+  if(rv.phase==="done"||rv.revealed){ const won=(rv.won||{})[myTeam]||0; const mine=sub&&sub.v!=null?fmtNum(it,sub.v):"no answer"; return `<div class="eyebrow">The answer</div><div class="pl-big num">${fmtNum(it,it.a)}</div><div class="note">You said <b>${esc(mine)}</b></div><div class="pl-won ${won?"":"zero"}">${won?"+"+won+" · Closest!":"No points this time"}</div>`; }
   if(rv.phase==="closed") return `<div class="pl-big">🔒</div><div class="bp-status">Answers are in. Reveal on the TV in a moment…</div>`;
-  if(sub||sentFor===G.s) return `<div class="pl-big">✅</div><div class="bp-status">Submitted${sub&&sub.v!=null?": "+sub.v+"%":""}. Waiting for the other team…</div>`;
+  if(sub||sentFor===G.s) return `<div class="pl-big">✅</div><div class="bp-status">Submitted${sub&&sub.v!=null?": "+fmtNum(it,sub.v):""}. Waiting for the other team…</div>`;
   if(pctDraftSlide!==G.s){ pctDraft=""; pctDraftSlide=G.s; }
   return `<div class="eyebrow">Question ${sl.i+1}</div><div class="pl-q">${esc(it.q)}</div><div class="pl-timer"><span class="tnum num">${left!=null?left:""}</span>s</div>
-    <div class="field"><label>Your guess, 0 to 100</label><input id="pct" type="number" inputmode="numeric" min="0" max="100" placeholder="%" value="${esc(pctDraft)}" oninput="pctDraft=this.value" style="font-size:2rem;text-align:center;font-family:var(--display)"></div>
+    <div class="field"><label>Your guess${it.unit?" (0 to 100)":""}</label><input id="pct" type="number" inputmode="numeric" min="0"${it.unit?' max="100"':""} placeholder="${it.unit?"%":"number"}" value="${esc(pctDraft)}" oninput="pctDraft=this.value" style="font-size:2rem;text-align:center;font-family:var(--display)"></div>
     <button class="btn primary" style="min-height:60px;font-size:1.2rem;width:100%" onclick="submitAnswer()">Submit</button><div class="note">Auto-submits when the timer runs out.</div>`; }
 function plRank(r,sl,rv){ const it=r.items[sl.i]; const sub=rv.sub&&rv.sub[myTeam]; const left=timerLeft();
   if(rv.phase==="done"||rv.revealed){ const won=(rv.won||{})[myTeam]||0, n=(rv.correct||{})[myTeam]||0; const o=(sub&&sub.order)||[]; return `<div class="eyebrow">The real order</div><div class="rk-list">${it.items.map((x,i)=>`<div class="rk-row done ${o[i]===x?"ok":"no"}"><span class="i num">${i+1}</span><span>${esc(x)}</span><span class="m">${o[i]===x?"✓":"✗"}</span></div>`).join("")}</div><div class="pl-won ${won?"":"zero"}">${n}/${it.items.length} right${won?" · +"+won:""}${n===it.items.length?" · Perfect!":""}</div>`; }
@@ -2049,7 +2581,7 @@ function tvPercent(r,sl){
   const shown=guesses.filter(g=>g.g!=null);
   let win=new Set(); if(rv.revealed&&shown.length){ const best=Math.min(...shown.map(g=>Math.abs(g.g-it.a))); shown.forEach(g=>{ if(Math.abs(g.g-it.a)===best) win.add(g.i); }); }
   return `<div class="stage"><div class="eyebrow">Question ${sl.i+1} of ${r.items.length}</div><div class="q">${esc(it.q)}</div>
-    ${rv.revealed?`<div class="guesses">${G.teams.map((t,i)=>{ const g=guesses[i]; return `<div class="guess ${win.has(i)?"win":""}" style="--tc:${tc(i)}"><div class="n">${esc(t.name)}</div><div class="g num">${g.g!=null?g.g+"%":"—"}</div>${rv.won&&rv.won[i]?`<div class="n" style="color:var(--good)">+${rv.won[i]}</div>`:""}</div>`; }).join("")}</div><div class="ans num">${it.a}%</div>`
+    ${rv.revealed?`<div class="guesses">${G.teams.map((t,i)=>{ const g=guesses[i]; return `<div class="guess ${win.has(i)?"win":""}" style="--tc:${tc(i)}"><div class="n">${esc(t.name)}</div><div class="g num">${fmtNum(it,g.g)}</div>${rv.won&&rv.won[i]?`<div class="n" style="color:var(--good)">+${rv.won[i]}</div>`:""}</div>`; }).join("")}</div><div class="ans num">${fmtNum(it,it.a)}</div>`
     :rv.phase==="closed"?`<div class="sub">Answers are in…</div>`:`${subPills(rv)}<div class="sub">Type your guess on your phone. Closest wins ${r.pts.win}.</div>`}</div>`;
 }
 function tvBoard(r){
@@ -2135,13 +2667,13 @@ function subStatus(rv,fmt){ return `<div class="log">${G.teams.map((t,i)=>{ cons
 function hostPercent(r,sl){
   const it=r.items[sl.i], rv=rev(); rv.guess=rv.guess||[]; const left=timerLeft();
   const ph=rv.phase||"open";
-  return `<div class="card"><div class="eyebrow">Question ${sl.i+1} of ${r.items.length}</div><div class="q">${esc(it.q)}</div>${ansBox(it.a+"%",rv.revealed)}${it.note?`<div class="note">${esc(it.note)}</div>`:""}</div>
+  return `<div class="card"><div class="eyebrow">Question ${sl.i+1} of ${r.items.length}</div><div class="q">${esc(it.q)}</div>${ansBox(fmtNum(it,it.a),rv.revealed)}${it.note?`<div class="note">${esc(it.note)}</div>`:""}</div>
   <div class="card"><h3>${ph==="open"?"⏱ "+(left!=null?left+"s":"")+" · answers open":ph==="closed"?"Answers in · revealing in a moment":"Revealed"}</h3>
-    ${subStatus(rv,s=>s.v!=null?s.v+"%":"no answer")}
+    ${subStatus(rv,s=>s.v!=null?fmtNum(it,s.v):"no answer")}
     <div class="note">Players type on their phones. Closes when both are in or after ${T_PCT}s, then reveals 2 seconds later. Closest team gets ${r.pts.win}, the other nothing.</div>
     <div class="row">${ph==="open"?`<button class="btn" onclick="closeSubmissions()">Close now</button>`:""}${ph!=="done"?`<button class="btn primary" onclick="revealPercentAuto()">Reveal now</button>`:""}<button class="btn ghost sm" onclick="restartSubmissions()">Restart ${T_PCT}s</button></div></div>
   <div class="card"><h3>No phones? Type the guesses</h3>
-    <div class="row">${G.teams.map((t,i)=>`<div class="field" style="flex:1 1 30%"><label style="color:${tc(i)}">${esc(t.name)}</label><input id="g${i}" type="number" inputmode="numeric" min="0" max="100" placeholder="%" value="${rv.guess[i]!=null?rv.guess[i]:""}" onchange="setGuess(${i},this.value)"></div>`).join("")}</div>
+    <div class="row">${G.teams.map((t,i)=>`<div class="field" style="flex:1 1 30%"><label style="color:${tc(i)}">${esc(t.name)}</label><input id="g${i}" type="number" inputmode="numeric" min="0"${it.unit?' max="100"':""} placeholder="${it.unit?"%":"number"}" value="${rv.guess[i]!=null?rv.guess[i]:""}" onchange="setGuess(${i},this.value)"></div>`).join("")}</div>
     ${teamBtns("awardPercentWin","+"+r.pts.win)}</div>`;
 }
 function setGuess(i,v){ rev().guess=rev().guess||[]; rev().guess[i]=v===""?null:Number(v); pushState(); }
@@ -2164,7 +2696,7 @@ function hostBoard(r){
     else if(rv.revealed){ play=`<div class="note"><b>Done.</b> Close the tile to go back to the board.</div>`; }
     else if(rv.passTo==null){ const ti=rv.turn; play=`<div class="note"><b style="color:${tc(ti)}">${esc(G.teams[ti].name)}</b> are answering. Right: +${tile.pts}. Wrong or timer out: passes over for ${half}.</div><div class="row"><button class="btn good" onclick="tileRight(${ti},${tile.pts})">✓ ${esc(G.teams[ti].name)} +${tile.pts}</button><button class="btn bad" onclick="tilePass()">✗ Wrong → pass</button></div>`; }
     else { const ti=rv.passTo; const more=(rv.tried||[]).length<G.teams.length; play=`<div class="note">Passed to <b style="color:${tc(ti)}">${esc(G.teams[ti].name)}</b> for ${half}. Wrong or timer out: ${more?"passes on again":"nobody scores"}.</div><div class="row"><button class="btn good" onclick="tileRight(${ti},${half})">✓ ${esc(G.teams[ti].name)} +${half}</button><button class="btn bad" onclick="tilePass()">✗ Wrong${more?" → pass":""}</button></div>`; }
-    return `<div class="card"><div class="eyebrow">${esc(cat.title)} · ${tile.pts} points${!rv.revealed&&left!=null?" · ⏱ "+left+"s":""}</div><div class="note">Category is really about: <b>${esc(cat.meaning)}</b></div><div class="q">${esc(tile.q)}</div>${ansBox(tile.a,rv.revealed)}
+    return `<div class="card"><div class="eyebrow">${esc(cat.title)} · ${tile.pts} points${!rv.revealed&&left!=null?" · ⏱ "+left+"s":""}</div><div class="note">Category is really about: <b>${esc(cat.meaning)}</b></div><div class="q">${esc(tile.q)}</div>${ansBox(tile.a,rv.revealed)}${tile.note?`<div class="note">${esc(tile.note)}</div>`:""}
       ${rv.revealed?"":`<button class="btn primary" onclick="rev().revealed=true;rev().deadline=null;G.timer.end=null;pushState()">Reveal answer</button>`}
       ${play}
       <button class="btn" onclick="closeTile()">Close tile → back to board</button></div>`;
@@ -2289,7 +2821,7 @@ const BANK_SECTIONS=[["percent","Round 1 · Nation Wants to Guess",it=>esc(it.q)
 function packCounts(k){ const c=BANK_SECTIONS.map(([t])=>bankPick(t,k).length); const warn=[]; if(c[1]!==5) warn.push(c[1]<5?"board has only "+c[1]+" categories":"board uses the first 5 of "+c[1]+" categories"); c.forEach((n,i)=>{ if(!n) warn.push(BANK_SECTIONS[i][1].split(" · ")[0]+" has no questions and will be skipped"); }); return `<b>${c[0]}</b> percent · <b>${c[1]}</b> board categories · <b>${c[2]}</b> rankings · <b>${c[3]}</b> emoji · <b>${c[4]}</b> people${warn.length?`<br><span style="color:var(--accent)">${esc(warn.join("; "))}.</span>`:""}`; }
 function renderBuilder(){
   $app.innerHTML=`<div class="host" style="padding-bottom:40px"><div class="h-top"><div class="eyebrow">Question bank</div><h3>Choose questions</h3>
-    <div class="h-status"><span>${Object.keys(LEVELS).map(k=>`<b>${LEVELS[k].label[0]}</b> ${BANK_SECTIONS.map(([t])=>bankPick(t,k).length).join("·")}`).join(" &nbsp; ")}</span><span>%·board·rank·emoji·who</span></div></div>
+    <div class="h-status"><span>${Object.keys(LEVELS).map(k=>`<b>${LEVELS[k].label[0]}</b> ${BANK_SECTIONS.map(([t])=>bankPick(t,k).length).join("·")}`).join(" &nbsp; ")}</span><span>number·board·rank·emoji·who</span></div></div>
     <div class="h-body">
     <div class="card"><div class="note">Tap <b>E</b>, <b>M</b> or <b>D</b> to put a question in that pack. A question can sit in more than one. The board takes the first five categories ticked for a level. Your choices are saved with the game, so the TV builds the same quiz.</div><div class="row"><button class="btn primary" onclick="builderOpen=false;render()">Done</button><button class="btn ghost" onclick="G.sel={};pushState()">Reset to bank defaults</button></div></div>
     ${BANK_SECTIONS.map(([t,title,lab])=>`<div class="card"><h3>${esc(title)}</h3>${(BANK[t]||[]).map(it=>`<div class="teamrow"><span class="note" style="white-space:normal;color:var(--fg)">${lab(it)}${it.suggested&&!itemLevels(it).length?` <span style="color:var(--accent);font-size:.8em">· new, suggested ${esc(LEVELS[it.suggested]?LEVELS[it.suggested].label:it.suggested)}</span>`:""}</span><div class="row" style="flex:0 0 auto;flex-wrap:nowrap">${Object.keys(LEVELS).map(k=>`<button class="btn sm ${inLevel(it,k)?"primary":"ghost"}" style="min-width:42px;flex:0 0 auto" onclick="toggleLevel('${it.id}','${k}')">${LEVELS[k].label[0]}</button>`).join("")}</div></div>`).join("")}</div>`).join("")}
